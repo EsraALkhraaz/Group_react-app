@@ -12,8 +12,8 @@ function App() {
     <div>
       {/* <Login /> */}
       {/* <Add_Employee/> */}
-      {/* <Add_Admin/> */}
-      <Admin/>
+      <Add_Admin/>
+      {/* <Admin/> */}
     </div>
   //   <Router>
   // <div >

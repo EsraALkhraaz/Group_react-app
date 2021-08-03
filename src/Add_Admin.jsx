@@ -3,8 +3,11 @@ import stylee from './Add_Employee.module.css';
 import image from './img/laptop-user-1-1179329.png';
 const Add_Admin = () => {
        return(
-<div >
+<div className="container-fluid">
+  <div className= "text-end">
 <img src={image} width="200" className="rounded float-right"/>
+  </div>
+
 <div className={` ${stylee.center} card container p-5 w-52 d-flex justify-content-center`}>
            <form>
                <div className="row">
