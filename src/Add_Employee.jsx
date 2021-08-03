@@ -3,10 +3,9 @@
  const Add_Employee = () => {
         
         return(
-<div >
-
-<div className={` ${stylee.center} card container p-5 w-52 d-flex justify-content-center`}>
-            <form>
+<div className=" vh-100 d-flex justify-content-center  align-items-center ">
+<div className={` ${stylee.center}  container p-5 w-52 `}>
+            <form className='p-4 shadow'>
                 <div className="row">
                   <div className="col-5">
                     <label for="inputEmail4">Name</label>

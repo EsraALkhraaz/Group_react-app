@@ -10,9 +10,9 @@ import Admin from './Admin';
 function App() {
   return (
     <div>
-      {/* <Login /> */}
+      <Login />
       {/* <Add_Employee/> */}
-      <Add_Admin/>
+      {/* <Add_Admin/> */}
       {/* <Admin/> */}
     </div>
   //   <Router>
