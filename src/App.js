@@ -7,11 +7,12 @@ import 'bootstrap/dist/css/bootstrap.css';
 import { BrowserRouter, Route, Link, Switch } from "react-router-dom";
 import Admin from './Admin';
 
+
 function App() {
   return (
     <div>
-      <Login />
-      {/* <Add_Employee/> */}
+      {/* <Login /> */}
+      <Add_Employee/>
       {/* <Add_Admin/> */}
       {/* <Admin/> */}
     </div>
