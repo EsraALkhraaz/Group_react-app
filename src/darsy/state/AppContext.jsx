@@ -76,7 +76,7 @@ const seedState = () => ({
       date: iso(4),
       time: '16:00',
       durationMins: 60,
-      price: 18,
+      price: 20,
       status: BOOKING_STATUS.PENDING_APPROVAL,
       createdAt: iso(-1),
       note: 'تركيز على المحادثة من فضلك',

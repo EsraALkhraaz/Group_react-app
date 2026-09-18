@@ -48,7 +48,7 @@ export const CITIES = [
 // Platform-standard hourly rates in LYD — one place to change them.
 // Group seats stay cheaper per learner; seat limits remain per teacher.
 export const SESSION_RATES = {
-  online: { individual: 30, group: 18 },
+  online: { individual: 30, group: 20 },
   f2f: { individual: 50, group: 30 },
 };
 
