@@ -59,7 +59,7 @@ const seedState = () => ({
       date: iso(2),
       time: '17:00',
       durationMins: 60,
-      price: 40,
+      price: 30,
       status: BOOKING_STATUS.CONFIRMED,
       meetingLink: 'https://meet.example.com/darsy-ys-4412',
       createdAt: iso(-3),

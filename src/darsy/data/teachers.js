@@ -1,3 +1,16 @@
+import { SESSION_RATES } from './catalog';
+
+// Rates are platform-standard (see SESSION_RATES); a teacher only decides
+// which modes and session types they offer, and the group seat limits.
+const onlineRates = (seats) => ({
+  individual: SESSION_RATES.online.individual,
+  group: seats ? { price: SESSION_RATES.online.group, ...seats } : null,
+});
+const f2fRates = (seats) => ({
+  individual: SESSION_RATES.f2f.individual,
+  group: seats ? { price: SESSION_RATES.f2f.group, ...seats } : null,
+});
+
 // Mock teacher directory. Only verified teachers are publicly listed (business rule).
 // Availability is a weekly template: key = JS day index (0 = Sunday), value = list of "HH:mm" starts.
 
@@ -26,8 +39,8 @@ export const TEACHERS = [
       '9 سنوات خبرة في التدريس الخصوصي',
     ],
     pricing: {
-      online: { individual: 40, group: { price: 22, minSeats: 3, maxSeats: 6 } },
-      f2f: { individual: 55, group: null },
+      online: onlineRates({ minSeats: 3, maxSeats: 6 }),
+      f2f: f2fRates(null),
     },
     availability: { 6: ['16:00', '17:00', '18:00', '19:00'], 0: ['17:00', '18:00'], 1: ['16:00', '17:00', '20:00'], 3: ['18:00', '19:00'] },
     reviews: [
@@ -60,8 +73,8 @@ export const TEACHERS = [
       '6 سنوات خبرة',
     ],
     pricing: {
-      online: { individual: 35, group: { price: 18, minSeats: 3, maxSeats: 8 } },
-      f2f: { individual: 45, group: { price: 25, minSeats: 3, maxSeats: 5 } },
+      online: onlineRates({ minSeats: 3, maxSeats: 8 }),
+      f2f: f2fRates({ minSeats: 3, maxSeats: 5 }),
     },
     availability: { 0: ['15:00', '16:00', '17:00'], 2: ['16:00', '17:00', '18:00'], 4: ['13:00', '14:00'], 6: ['10:00', '11:00', '17:00'] },
     reviews: [
@@ -89,8 +102,8 @@ export const TEACHERS = [
     bio: 'مدرّسة علوم وكيمياء للمرحلتين الإعدادية والثانوية، أركّز على حل المسائل وتبسيط المفاهيم قبل الامتحانات.',
     qualifications: ['بكالوريوس كيمياء — جامعة طرابلس', '5 سنوات خبرة في التدريس'],
     pricing: {
-      online: { individual: 38, group: { price: 20, minSeats: 3, maxSeats: 6 } },
-      f2f: { individual: 50, group: null },
+      online: onlineRates({ minSeats: 3, maxSeats: 6 }),
+      f2f: f2fRates(null),
     },
     availability: { 1: ['17:00', '18:00', '19:00'], 3: ['16:00', '17:00'], 5: ['10:00', '11:00', '12:00'] },
     reviews: [
@@ -117,7 +130,7 @@ export const TEACHERS = [
     bio: 'مدرس فيزياء ورياضيات للمرحلة الثانوية والسنوات الجامعية الأولى. الحصص أونلاين فقط مع سبورة تفاعلية.',
     qualifications: ['ماجستير فيزياء — جامعة مصراتة', 'خبرة 4 سنوات في التدريس الجامعي'],
     pricing: {
-      online: { individual: 45, group: { price: 25, minSeats: 4, maxSeats: 10 } },
+      online: onlineRates({ minSeats: 4, maxSeats: 10 }),
       f2f: null,
     },
     availability: { 0: ['20:00', '21:00'], 2: ['20:00', '21:00'], 4: ['19:00', '20:00'] },
@@ -145,8 +158,8 @@ export const TEACHERS = [
     bio: 'معلمة لغة عربية للمرحلة الابتدائية، متخصصة في تقوية القراءة والإملاء للأطفال.',
     qualifications: ['ليسانس لغة عربية', 'خبرة 3 سنوات في المرحلة الابتدائية'],
     pricing: {
-      online: { individual: 28, group: null },
-      f2f: { individual: 35, group: { price: 20, minSeats: 3, maxSeats: 4 } },
+      online: onlineRates(null),
+      f2f: f2fRates({ minSeats: 3, maxSeats: 4 }),
     },
     availability: { 6: ['09:00', '10:00', '11:00'], 0: ['16:00', '17:00'], 2: ['16:00', '17:00'] },
     reviews: [
@@ -173,7 +186,7 @@ export const TEACHERS = [
     bio: 'مطوّر برمجيات ومدرّس مقدمات البرمجة (بايثون، جافاسكربت) وأساسيات الحاسوب لطلاب الثانوي والجامعة.',
     qualifications: ['بكالوريوس علوم حاسوب', 'خبرة 7 سنوات في تطوير البرمجيات'],
     pricing: {
-      online: { individual: 50, group: { price: 28, minSeats: 3, maxSeats: 8 } },
+      online: onlineRates({ minSeats: 3, maxSeats: 8 }),
       f2f: null,
     },
     availability: { 1: ['19:00', '20:00', '21:00'], 3: ['19:00', '20:00'], 5: ['14:00', '15:00', '16:00'] },
