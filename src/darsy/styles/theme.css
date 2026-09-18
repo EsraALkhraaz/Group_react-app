@@ -1,0 +1,389 @@
+/* Darsy design tokens — visual direction adapted from the E-Study reference */
+:root {
+  --c-ink: #14161C;
+  --c-muted: #6B7280;
+  --c-faint: #9AA1AE;
+  --c-line: #EEF0F4;
+  --c-surface: #FFFFFF;
+  --c-soft: #EEF2FB;
+  --c-pastel: #DCE7FB;
+  --c-blue: #3457D5;
+  --c-blue-bg: #E4ECFD;
+  --c-blue-text: #2F5FD1;
+  --c-yellow: #F6B93B;
+  --c-yellow-bg: #FDECD3;
+  --c-yellow-text: #9A6B12;
+  --c-coral: #EB7A70;
+  --c-coral-bg: #FCE7E3;
+  --c-green: #2F8F72;
+  --c-green-bg: #DCEFE9;
+
+  --r-sm: 12px;
+  --r-md: 16px;
+  --r-lg: 20px;
+  --r-pill: 999px;
+
+  --shadow-card: 0 10px 24px rgba(30, 40, 90, 0.08);
+  --shadow-float: 0 16px 36px rgba(30, 40, 90, 0.16);
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: 'Cairo', system-ui, sans-serif;
+  background: #E7ECF7;
+  color: var(--c-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+button { font-family: inherit; cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+input, select, textarea { font-family: inherit; }
+
+/* ---------- app shell ---------- */
+/* Fixed height (not min-height) so the body scrolls inside the shell
+   and the bottom nav stays pinned, like a native app. */
+.dz-app {
+  max-width: 430px;
+  margin: 0 auto;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--c-surface);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 0 0 60px rgba(30, 40, 90, 0.12);
+}
+
+.dz-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.dz-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px 24px;
+}
+
+.dz-body--pastel { background: var(--c-pastel); }
+.dz-body--soft { background: var(--c-soft); }
+
+/* ---------- top bar ---------- */
+.dz-topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px 10px;
+  background: var(--c-surface);
+}
+.dz-topbar--pastel { background: var(--c-pastel); }
+.dz-topbar__title { font-size: 17px; font-weight: 800; margin: 0; flex: 1; }
+.dz-topbar__sub { font-size: 12px; color: var(--c-muted); margin-top: 2px; }
+
+.dz-iconbtn {
+  width: 38px; height: 38px;
+  border-radius: var(--r-sm);
+  border: none;
+  background: #F2F4F9;
+  color: var(--c-ink);
+  display: inline-flex; align-items: center; justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+}
+.dz-iconbtn--plain { background: transparent; }
+.dz-iconbtn__dot {
+  position: absolute; top: 7px; inset-inline-start: 7px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--c-coral);
+}
+
+/* ---------- type ---------- */
+.dz-h1 { font-size: 26px; font-weight: 800; line-height: 1.4; margin: 0; }
+.dz-h2 { font-size: 18px; font-weight: 800; margin: 0; }
+.dz-h3 { font-size: 15px; font-weight: 700; margin: 0; }
+.dz-muted { color: var(--c-muted); font-size: 13px; }
+.dz-faint { color: var(--c-faint); font-size: 12px; }
+.dz-section-title {
+  font-size: 16px; font-weight: 800;
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 4px 0 10px;
+}
+
+/* ---------- buttons ---------- */
+.dz-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%;
+  min-height: 52px;
+  border: none;
+  border-radius: var(--r-md);
+  font-size: 15px; font-weight: 800;
+  padding: 0 18px;
+}
+.dz-btn--primary { background: var(--c-yellow); color: var(--c-ink); }
+.dz-btn--blue { background: var(--c-blue); color: #fff; }
+.dz-btn--ghost { background: #F2F4F9; color: var(--c-ink); }
+.dz-btn--danger { background: var(--c-coral-bg); color: #B3453B; }
+.dz-btn--green { background: var(--c-green); color: #fff; }
+.dz-btn:disabled { opacity: .45; cursor: not-allowed; }
+.dz-btn--sm { min-height: 40px; font-size: 13px; border-radius: var(--r-sm); width: auto; }
+
+.dz-footer-cta {
+  padding: 12px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+  background: var(--c-surface);
+  border-top: 1px solid var(--c-line);
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+/* ---------- cards ---------- */
+.dz-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-lg);
+  padding: 14px;
+}
+.dz-card--soft { background: var(--c-soft); border-color: transparent; }
+.dz-card--flat { box-shadow: none; }
+.dz-card--raised { border: none; box-shadow: var(--shadow-card); }
+
+.dz-stack { display: flex; flex-direction: column; gap: 12px; }
+.dz-stack--sm { gap: 8px; }
+.dz-row { display: flex; align-items: center; gap: 10px; }
+.dz-row--between { justify-content: space-between; }
+.dz-grow { flex: 1; min-width: 0; }
+
+/* ---------- chips ---------- */
+.dz-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--r-pill);
+  background: #F2F4F9;
+  color: var(--c-muted);
+  font-size: 13px; font-weight: 700;
+  border: none;
+  white-space: nowrap;
+}
+.dz-chip--active { background: var(--c-blue-bg); color: var(--c-blue-text); }
+.dz-chip--sm { padding: 4px 10px; font-size: 11px; border-radius: 8px; }
+.dz-chip--blue { background: var(--c-blue-bg); color: var(--c-blue-text); }
+.dz-chip--orange { background: var(--c-yellow-bg); color: var(--c-yellow-text); }
+.dz-chip--green { background: var(--c-green-bg); color: var(--c-green); }
+.dz-chip--coral { background: var(--c-coral-bg); color: #B3453B; }
+
+.dz-chiprow {
+  display: flex; gap: 8px; overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.dz-chiprow::-webkit-scrollbar { display: none; }
+
+/* ---------- avatar ---------- */
+.dz-avatar {
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 16px;
+  flex-shrink: 0;
+}
+.dz-avatar--lg { width: 72px; height: 72px; font-size: 24px; }
+.dz-avatar--sm { width: 36px; height: 36px; font-size: 13px; }
+
+/* ---------- teacher card ---------- */
+.dz-teacher {
+  display: flex; gap: 12px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-lg);
+  padding: 14px;
+  width: 100%;
+  text-align: start;
+}
+.dz-teacher__name { font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 5px; }
+.dz-teacher__meta { font-size: 12px; color: var(--c-muted); margin-top: 3px; }
+.dz-price { font-size: 15px; font-weight: 800; color: var(--c-ink); white-space: nowrap; }
+.dz-price small { font-size: 11px; font-weight: 600; color: var(--c-muted); display: block; }
+
+/* ---------- inputs ---------- */
+.dz-field { display: flex; flex-direction: column; gap: 6px; }
+.dz-label { font-size: 13px; font-weight: 700; color: var(--c-ink); }
+.dz-input, .dz-select, .dz-textarea {
+  width: 100%;
+  min-height: 50px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--c-line);
+  background: #F7F8FC;
+  padding: 0 14px;
+  font-size: 14px;
+  color: var(--c-ink);
+}
+.dz-textarea { min-height: 90px; padding: 12px 14px; resize: vertical; }
+.dz-select { appearance: none; background-image: none; }
+.dz-input:focus, .dz-select:focus, .dz-textarea:focus {
+  outline: 2px solid var(--c-blue-bg);
+  border-color: var(--c-blue);
+}
+
+/* ---------- bottom nav ---------- */
+.dz-nav {
+  display: flex; align-items: center; justify-content: space-around;
+  padding: 8px 6px calc(10px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--c-line);
+  background: var(--c-surface);
+}
+.dz-nav__item {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  color: var(--c-faint);
+  font-size: 11px; font-weight: 600;
+  background: none; border: none; padding: 4px 8px;
+}
+.dz-nav__item--active { color: var(--c-blue); font-weight: 800; }
+
+/* ---------- step indicator ---------- */
+.dz-steps {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 4px;
+  padding: 14px 16px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-lg);
+}
+.dz-step { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; }
+.dz-step__bullet {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800;
+  background: #F2F4F9; color: var(--c-faint);
+}
+.dz-step__bullet--done { background: var(--c-yellow); color: var(--c-ink); }
+.dz-step__bullet--current { background: var(--c-blue); color: #fff; }
+.dz-step__label { font-size: 10px; color: var(--c-muted); text-align: center; }
+
+.dz-banner {
+  display: flex; align-items: center; gap: 10px;
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  font-size: 13px; font-weight: 700;
+}
+.dz-banner--green { background: var(--c-green-bg); color: var(--c-green); }
+.dz-banner--blue { background: var(--c-blue-bg); color: var(--c-blue-text); }
+.dz-banner--yellow { background: var(--c-yellow-bg); color: var(--c-yellow-text); }
+.dz-banner--coral { background: var(--c-coral); color: #fff; }
+
+/* ---------- calendar ---------- */
+.dz-cal__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.dz-cal__grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.dz-cal__dow { font-size: 11px; color: var(--c-faint); text-align: center; padding-bottom: 6px; }
+.dz-cal__day {
+  aspect-ratio: 1;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  font-size: 13px;
+  color: var(--c-ink);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+}
+.dz-cal__day:disabled { color: #D3D7E0; }
+.dz-cal__day--selected { background: var(--c-blue); color: #fff; font-weight: 800; }
+.dz-cal__dot { width: 4px; height: 4px; border-radius: 50%; background: var(--c-yellow); }
+.dz-cal__day--selected .dz-cal__dot { background: #fff; }
+
+/* ---------- time slots ---------- */
+.dz-slot {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  border-radius: var(--r-md);
+  border: none;
+  padding: 0 16px;
+  font-size: 14px; font-weight: 700;
+  background: var(--c-blue);
+  color: #fff;
+}
+.dz-slot--selected { background: var(--c-yellow); color: var(--c-ink); }
+.dz-slot--taken { background: #F2F4F9; color: var(--c-faint); }
+.dz-slot__time { min-width: 64px; font-size: 13px; color: var(--c-muted); font-weight: 700; }
+
+.dz-slotrow { display: flex; align-items: center; gap: 12px; }
+
+/* ---------- list rows ---------- */
+.dz-listrow {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--c-line);
+  width: 100%;
+  background: none; border-inline: none; border-top: none;
+  text-align: start;
+}
+.dz-listrow:last-child { border-bottom: none; }
+
+/* ---------- misc ---------- */
+.dz-divider { height: 1px; background: var(--c-line); margin: 4px 0; }
+.dz-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--c-muted);
+  font-size: 14px;
+}
+.dz-kv { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; padding: 7px 0; }
+.dz-kv__k { color: var(--c-muted); }
+.dz-kv__v { font-weight: 700; text-align: end; }
+.dz-total { border-top: 1px dashed var(--c-line); margin-top: 6px; padding-top: 10px; }
+
+.dz-illustration {
+  width: 210px; height: 210px;
+  border-radius: 32px;
+  background: #fff;
+  box-shadow: var(--shadow-float);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  margin: 0 auto;
+}
+.dz-illustration__ring {
+  width: 122px; height: 122px; border-radius: 50%;
+  background: var(--c-green-bg);
+  display: flex; align-items: center; justify-content: center;
+}
+.dz-illustration__dot { position: absolute; border-radius: 50%; }
+
+.dz-logo { display: flex; align-items: center; gap: 7px; font-size: 22px; font-weight: 800; }
+.dz-logo__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c-yellow); }
+
+.dz-stats { display: flex; background: var(--c-soft); border-radius: var(--r-md); padding: 12px 8px; }
+.dz-stats__cell { flex: 1; text-align: center; }
+.dz-stats__cell + .dz-stats__cell { border-inline-start: 1px solid #DDE3F2; }
+.dz-stats__num { font-size: 16px; font-weight: 800; }
+.dz-stats__lbl { font-size: 11px; color: var(--c-muted); margin-top: 2px; }
+
+.dz-tabs { display: flex; gap: 8px; padding: 0 20px 12px; background: var(--c-surface); }
+
+.dz-thumb {
+  height: 92px;
+  border-radius: var(--r-md);
+  display: flex; align-items: flex-end;
+  padding: 10px;
+  color: #fff; font-weight: 800; font-size: 13px;
+}
+
+.dz-sheet-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(16, 20, 34, 0.45);
+  display: flex; align-items: flex-end; justify-content: center;
+  z-index: 40;
+}
+.dz-sheet {
+  width: 100%; max-width: 430px;
+  background: #fff;
+  border-radius: 24px 24px 0 0;
+  padding: 18px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+  max-height: 85vh; overflow-y: auto;
+}
+.dz-sheet__handle {
+  width: 42px; height: 4px; border-radius: 999px;
+  background: #DFE3EC; margin: 0 auto 14px;
+}

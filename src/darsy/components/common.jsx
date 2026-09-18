@@ -1,0 +1,144 @@
+import React from 'react';
+import { useHistory } from 'react-router-dom';
+import { IconBack, IconStar, IconVerified, IconHome, IconCalendar, IconCap, IconUser, IconGrid } from './Icons';
+
+export function TopBar({ title, subtitle, back, pastel, right, onBack }) {
+  const history = useHistory();
+  return (
+    <header className={`dz-topbar${pastel ? ' dz-topbar--pastel' : ''}`}>
+      {back && (
+        <button
+          type="button"
+          className="dz-iconbtn"
+          aria-label="رجوع"
+          onClick={() => (onBack ? onBack() : history.goBack())}
+        >
+          <IconBack size={17} />
+        </button>
+      )}
+      <div className="dz-grow">
+        <h1 className="dz-topbar__title">{title}</h1>
+        {subtitle && <div className="dz-topbar__sub">{subtitle}</div>}
+      </div>
+      {right}
+    </header>
+  );
+}
+
+export function Stars({ value, size = 14, showValue = true }) {
+  const rounded = Math.round(value);
+  return (
+    <span className="dz-row" style={{ gap: 3 }}>
+      {[1, 2, 3, 4, 5].map((i) => (
+        <IconStar key={i} size={size} filled={i <= rounded} />
+      ))}
+      {showValue && <span style={{ fontSize: 12, fontWeight: 700, marginInlineStart: 4 }}>{value.toFixed(1)}</span>}
+    </span>
+  );
+}
+
+export function Avatar({ teacher, size = '' }) {
+  return (
+    <div
+      className={`dz-avatar ${size === 'lg' ? 'dz-avatar--lg' : size === 'sm' ? 'dz-avatar--sm' : ''}`}
+      style={{ background: teacher.color, color: teacher.textColor }}
+      aria-hidden="true"
+    >
+      {teacher.initials}
+    </div>
+  );
+}
+
+export function VerifiedMark() {
+  return (
+    <span title="هوية موثقة" className="dz-row" style={{ gap: 0 }}>
+      <IconVerified size={15} />
+    </span>
+  );
+}
+
+export function StatusBadge({ status, label, tone }) {
+  return <span className={`dz-chip dz-chip--sm dz-chip--${tone}`}>{label || status}</span>;
+}
+
+export function Banner({ tone = 'blue', children, icon }) {
+  return (
+    <div className={`dz-banner dz-banner--${tone}`}>
+      {icon}
+      <span className="dz-grow">{children}</span>
+    </div>
+  );
+}
+
+export function Field({ label, children, hint }) {
+  return (
+    <label className="dz-field">
+      <span className="dz-label">{label}</span>
+      {children}
+      {hint && <span className="dz-faint">{hint}</span>}
+    </label>
+  );
+}
+
+export function EmptyState({ title, body }) {
+  return (
+    <div className="dz-empty">
+      <div style={{ fontWeight: 800, color: '#14161C', marginBottom: 6 }}>{title}</div>
+      <div>{body}</div>
+    </div>
+  );
+}
+
+const NAV = [
+  { key: 'home', label: 'الرئيسية', path: '/home', Icon: IconHome },
+  { key: 'bookings', label: 'حجوزاتي', path: '/bookings', Icon: IconCalendar },
+  { key: 'search', label: 'المدرسون', path: '/search', Icon: IconCap },
+  { key: 'profile', label: 'حسابي', path: '/profile', Icon: IconUser },
+  { key: 'more', label: 'المزيد', path: '/more', Icon: IconGrid },
+];
+
+export function BottomNav({ active }) {
+  const history = useHistory();
+  return (
+    <nav className="dz-nav">
+      {NAV.map(({ key, label, path, Icon }) => (
+        <button
+          key={key}
+          type="button"
+          className={`dz-nav__item${active === key ? ' dz-nav__item--active' : ''}`}
+          onClick={() => history.push(path)}
+        >
+          <Icon size={20} />
+          <span>{label}</span>
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+export function Sheet({ open, onClose, title, children }) {
+  if (!open) return null;
+  return (
+    <div className="dz-sheet-backdrop" onClick={onClose} role="presentation">
+      <div className="dz-sheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={title}>
+        <div className="dz-sheet__handle" />
+        {title && <h2 className="dz-h2" style={{ marginBottom: 12 }}>{title}</h2>}
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export const money = (n) => `${n} د.ل`;
+
+export const formatDate = (isoDate) => {
+  const d = new Date(`${isoDate}T00:00:00`);
+  return d.toLocaleDateString('ar-LY', { weekday: 'long', day: 'numeric', month: 'long' });
+};
+
+export const formatTime = (hhmm) => {
+  const [h, m] = hhmm.split(':').map(Number);
+  const period = h >= 12 ? 'مساءً' : 'صباحًا';
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return `${hour12}:${String(m).padStart(2, '0')} ${period}`;
+};
