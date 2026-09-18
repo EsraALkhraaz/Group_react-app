@@ -66,7 +66,7 @@ export default function TeacherDashboard() {
               {requests.map((b) => (
                 <div key={b.id} className="dz-card">
                   <div className="dz-row" style={{ marginBottom: 10 }}>
-                    <span className="dz-avatar dz-avatar--sm" style={{ background: 'var(--c-soft)', color: 'var(--c-blue-text)' }}>
+                    <span className="dz-avatar dz-avatar--sm" style={{ background: 'var(--c-soft)', color: 'var(--c-primary-text)' }}>
                       {b.learnerName.charAt(0)}
                     </span>
                     <span className="dz-grow">
@@ -81,11 +81,11 @@ export default function TeacherDashboard() {
                   </div>
 
                   <div className="dz-row" style={{ gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
-                    <span className="dz-chip dz-chip--sm dz-chip--blue">
+                    <span className="dz-chip dz-chip--sm dz-chip--primary">
                       {b.mode === 'online' ? <IconVideo size={11} /> : <IconPin size={11} />}
                       {b.mode === 'online' ? 'أونلاين' : 'حضوري'}
                     </span>
-                    <span className="dz-chip dz-chip--sm dz-chip--orange">
+                    <span className="dz-chip dz-chip--sm dz-chip--accent">
                       {b.sessionType === 'group' ? 'جماعية' : 'فردية'}
                     </span>
                   </div>
@@ -93,7 +93,7 @@ export default function TeacherDashboard() {
                   {b.note && <div className="dz-muted" style={{ marginBottom: 12 }}>ملاحظة الطالب: {b.note}</div>}
 
                   <div className="dz-row" style={{ gap: 8 }}>
-                    <button type="button" className="dz-btn dz-btn--green dz-btn--sm" style={{ flex: 1 }} onClick={() => approveBooking(b.id)}>
+                    <button type="button" className="dz-btn dz-btn--success dz-btn--sm" style={{ flex: 1 }} onClick={() => approveBooking(b.id)}>
                       <IconCheck size={15} /> قبول
                     </button>
                     <button type="button" className="dz-btn dz-btn--danger dz-btn--sm" style={{ flex: 1 }} onClick={() => setRejectId(b.id)}>
@@ -140,7 +140,7 @@ export default function TeacherDashboard() {
             <div className="dz-kv"><span className="dz-kv__k">عمولة المنصة ({Math.round(COMMISSION_RATE * 100)}%)</span><span className="dz-kv__v">- {money(commission)}</span></div>
             <div className="dz-kv dz-total"><span className="dz-kv__k">صافي المستحق</span><span className="dz-kv__v">{money(net)}</span></div>
             <div style={{ marginTop: 12 }}>
-              <Banner tone="blue">تُحوَّل المستحقات بعد إتمام الحصص وفق دورة الصرف المعتمدة.</Banner>
+              <Banner tone="primary">تُحوَّل المستحقات بعد إتمام الحصص وفق دورة الصرف المعتمدة.</Banner>
             </div>
           </div>
         </section>

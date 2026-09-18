@@ -61,7 +61,7 @@ export function StatusBadge({ status, label, tone }) {
   return <span className={`dz-chip dz-chip--sm dz-chip--${tone}`}>{label || status}</span>;
 }
 
-export function Banner({ tone = 'blue', children, icon }) {
+export function Banner({ tone = 'primary', children, icon }) {
   return (
     <div className={`dz-banner dz-banner--${tone}`}>
       {icon}

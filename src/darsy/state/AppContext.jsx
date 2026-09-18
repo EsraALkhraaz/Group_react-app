@@ -24,13 +24,13 @@ export const STATUS_LABEL = {
 };
 
 export const STATUS_TONE = {
-  pending_approval: 'orange',
-  rejected: 'coral',
-  awaiting_payment: 'orange',
-  payment_review: 'blue',
-  confirmed: 'green',
-  completed: 'blue',
-  cancelled: 'coral',
+  pending_approval: 'accent',
+  rejected: 'danger',
+  awaiting_payment: 'accent',
+  payment_review: 'primary',
+  confirmed: 'success',
+  completed: 'primary',
+  cancelled: 'danger',
 };
 
 const iso = (daysFromNow) => {
@@ -99,9 +99,9 @@ const seedState = () => ({
     },
   ],
   notifications: [
-    { id: 'n1', title: 'تم تأكيد حجزك مع أ. أحمد علي', body: 'حصة الرياضيات بعد يومين — 5:00 مساءً', tone: 'green', unread: true },
-    { id: 'n2', title: 'طلب حجزك بانتظار موافقة المدرسة', body: 'أرسلنا طلبك إلى أ. سارة محمد', tone: 'orange', unread: true },
-    { id: 'n3', title: 'قيّم حصتك السابقة', body: 'كيف كانت حصة العلوم مع أ. منى سالم؟', tone: 'blue', unread: false },
+    { id: 'n1', title: 'تم تأكيد حجزك مع أ. أحمد علي', body: 'حصة الرياضيات بعد يومين — 5:00 مساءً', tone: 'success', unread: true },
+    { id: 'n2', title: 'طلب حجزك بانتظار موافقة المدرسة', body: 'أرسلنا طلبك إلى أ. سارة محمد', tone: 'accent', unread: true },
+    { id: 'n3', title: 'قيّم حصتك السابقة', body: 'كيف كانت حصة العلوم مع أ. منى سالم؟', tone: 'primary', unread: false },
   ],
 });
 
@@ -170,7 +170,7 @@ export function AppProvider({ children }) {
             ...s.bookings,
           ],
           notifications: [
-            { id: `n${Date.now()}`, title: 'أُرسل طلب الحجز', body: 'سيصلك إشعار فور رد المدرس على طلبك', tone: 'orange', unread: true },
+            { id: `n${Date.now()}`, title: 'أُرسل طلب الحجز', body: 'سيصلك إشعار فور رد المدرس على طلبك', tone: 'accent', unread: true },
             ...s.notifications,
           ],
         }));
@@ -179,12 +179,12 @@ export function AppProvider({ children }) {
 
       approveBooking: (id) => {
         patchBooking(id, { status: BOOKING_STATUS.AWAITING_PAYMENT });
-        pushNotification({ title: 'وافق المدرس على طلبك', body: 'أكمل الدفع لتأكيد الحجز', tone: 'blue' });
+        pushNotification({ title: 'وافق المدرس على طلبك', body: 'أكمل الدفع لتأكيد الحجز', tone: 'primary' });
       },
 
       rejectBooking: (id, reason) => {
         patchBooking(id, { status: BOOKING_STATUS.REJECTED, rejectionReason: reason || '' });
-        pushNotification({ title: 'اعتذر المدرس عن الموعد', body: reason || 'يمكنك اختيار موعد آخر أو مدرس آخر', tone: 'coral' });
+        pushNotification({ title: 'اعتذر المدرس عن الموعد', body: reason || 'يمكنك اختيار موعد آخر أو مدرس آخر', tone: 'danger' });
       },
 
       // Escrow: the learner transfers to the platform account and uploads a receipt.
@@ -193,7 +193,7 @@ export function AppProvider({ children }) {
           status: BOOKING_STATUS.PAYMENT_REVIEW,
           receipt: { fileName: receiptName, uploadedAt: new Date().toISOString() },
         });
-        pushNotification({ title: 'استلمنا إيصال الدفع', body: 'تراجعه الإدارة خلال وقت قصير', tone: 'blue' });
+        pushNotification({ title: 'استلمنا إيصال الدفع', body: 'تراجعه الإدارة خلال وقت قصير', tone: 'primary' });
       },
 
       // Stands in for the admin confirming the transfer landed in the platform account.
@@ -202,7 +202,7 @@ export function AppProvider({ children }) {
           status: BOOKING_STATUS.CONFIRMED,
           meetingLink: 'https://meet.example.com/darsy-' + id.slice(-4),
         });
-        pushNotification({ title: 'تم تأكيد حجزك', body: 'ستصلك رسالة تذكير قبل الموعد', tone: 'green' });
+        pushNotification({ title: 'تم تأكيد حجزك', body: 'ستصلك رسالة تذكير قبل الموعد', tone: 'success' });
       },
 
       cancelBooking: (id) => patchBooking(id, { status: BOOKING_STATUS.CANCELLED }),

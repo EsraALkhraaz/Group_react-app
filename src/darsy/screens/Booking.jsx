@@ -114,8 +114,8 @@ export default function Booking() {
                   style={{
                     width: '100%',
                     textAlign: 'start',
-                    borderColor: sessionType === opt.id ? 'var(--c-blue)' : 'var(--c-line)',
-                    background: sessionType === opt.id ? 'var(--c-blue-bg)' : '#fff',
+                    borderColor: sessionType === opt.id ? 'var(--c-primary)' : 'var(--c-line)',
+                    background: sessionType === opt.id ? 'var(--c-primary-bg)' : '#fff',
                     opacity: available ? 1 : 0.5,
                   }}
                   onClick={() => { setSessionType(opt.id); setMode(''); setDate(''); setTime(''); }}
@@ -168,8 +168,8 @@ export default function Booking() {
                   style={{
                     width: '100%',
                     textAlign: 'start',
-                    borderColor: mode === m.id ? 'var(--c-blue)' : 'var(--c-line)',
-                    background: mode === m.id ? 'var(--c-blue-bg)' : '#fff',
+                    borderColor: mode === m.id ? 'var(--c-primary)' : 'var(--c-line)',
+                    background: mode === m.id ? 'var(--c-primary-bg)' : '#fff',
                     opacity: supported ? 1 : 0.5,
                   }}
                   onClick={() => { setMode(m.id); setDate(''); setTime(''); }}
@@ -192,7 +192,7 @@ export default function Booking() {
             })}
 
             {sessionType === 'group' && groupConfig && (
-              <Banner tone="yellow">
+              <Banner tone="accent">
                 الجلسة الجماعية تنعقد بحد أدنى {groupConfig.minSeats} طلاب وبحد أقصى {groupConfig.maxSeats}.
               </Banner>
             )}
@@ -328,7 +328,7 @@ export default function Booking() {
 
       <div className="dz-footer-cta">
         {step === 3 && (
-          <Banner tone="blue">لن يتم خصم أي مبلغ الآن — يُطلب الدفع بعد موافقة المدرس.</Banner>
+          <Banner tone="primary">لن يتم خصم أي مبلغ الآن — يُطلب الدفع بعد موافقة المدرس.</Banner>
         )}
         <button type="button" className="dz-btn dz-btn--primary" disabled={!canContinue} onClick={goNext}>
           {step === 3 ? 'إرسال طلب الحجز' : 'متابعة'}

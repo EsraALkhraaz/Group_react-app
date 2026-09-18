@@ -21,14 +21,14 @@ export default function Profile() {
 
       <div className="dz-body">
         <div className="dz-card dz-card--raised dz-row" style={{ marginBottom: 16 }}>
-          <span className="dz-avatar" style={{ background: 'var(--c-blue-bg)', color: 'var(--c-blue-text)' }}>
+          <span className="dz-avatar" style={{ background: 'var(--c-primary-bg)', color: 'var(--c-primary-text)' }}>
             {profile.name.charAt(0)}
           </span>
           <span className="dz-grow">
             <span style={{ fontWeight: 800, fontSize: 15, display: 'block' }}>{profile.name}</span>
             <span className="dz-muted" style={{ display: 'block', marginTop: 2 }}>{profile.phone}</span>
           </span>
-          <span className="dz-chip dz-chip--sm dz-chip--green">
+          <span className="dz-chip dz-chip--sm dz-chip--success">
             {role === 'parent' ? 'ولي أمر' : role === 'teacher' ? 'مدرس' : 'طالب'}
           </span>
         </div>
@@ -41,7 +41,7 @@ export default function Profile() {
                 const count = bookings.filter((b) => b.learnerName === c.name).length;
                 return (
                   <div key={c.id} className="dz-card dz-card--soft dz-row">
-                    <span className="dz-avatar dz-avatar--sm" style={{ background: '#fff', color: 'var(--c-blue-text)' }}>
+                    <span className="dz-avatar dz-avatar--sm" style={{ background: '#fff', color: 'var(--c-primary-text)' }}>
                       {c.name.charAt(0)}
                     </span>
                     <span className="dz-grow">
@@ -77,7 +77,7 @@ export default function Profile() {
         <section>
           <div className="dz-section-title"><span>أدوات النموذج الأولي</span></div>
           <div className="dz-stack dz-stack--sm">
-            <Banner tone="yellow">
+            <Banner tone="accent">
               للاستكشاف فقط: يمكنك التنقل بين واجهة ولي الأمر وواجهة المدرس لرؤية دورة الحجز كاملة.
             </Banner>
             <button type="button" className="dz-btn dz-btn--ghost dz-btn--sm" style={{ width: '100%' }} onClick={() => { setRole('teacher'); history.push('/teacher'); }}>

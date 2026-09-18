@@ -28,7 +28,7 @@ export default function Notifications() {
                   <span style={{ fontWeight: 700, fontSize: 13, display: 'block' }}>{n.title}</span>
                   <span className="dz-muted" style={{ display: 'block', marginTop: 3 }}>{n.body}</span>
                 </span>
-                {n.unread && <span style={{ width: 8, height: 8, borderRadius: 4, background: 'var(--c-coral)' }} />}
+                {n.unread && <span style={{ width: 8, height: 8, borderRadius: 4, background: 'var(--c-danger)' }} />}
               </div>
             ))}
           </div>

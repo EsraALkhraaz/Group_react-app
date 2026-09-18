@@ -75,7 +75,7 @@ export default function Results() {
       {activeFilters.length > 0 && (
         <div className="dz-chiprow" style={{ padding: '0 20px 10px' }}>
           {activeFilters.map((f) => (
-            <span key={f} className="dz-chip dz-chip--sm dz-chip--blue">{f}</span>
+            <span key={f} className="dz-chip dz-chip--sm dz-chip--primary">{f}</span>
           ))}
         </div>
       )}

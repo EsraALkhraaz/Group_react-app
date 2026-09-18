@@ -15,7 +15,7 @@ const TABS = [
 function PriceRow({ icon, title, subtitle, price, unavailable }) {
   return (
     <div className="dz-row" style={{ padding: '12px 0', borderBottom: '1px solid var(--c-line)' }}>
-      <span className="dz-avatar dz-avatar--sm" style={{ background: 'var(--c-soft)', color: 'var(--c-blue-text)' }}>
+      <span className="dz-avatar dz-avatar--sm" style={{ background: 'var(--c-soft)', color: 'var(--c-primary-text)' }}>
         {icon}
       </span>
       <span className="dz-grow">
@@ -129,7 +129,7 @@ export default function TeacherProfile() {
               <div className="dz-h3" style={{ marginBottom: 8 }}>الصفوف الدراسية</div>
               <div className="dz-chiprow" style={{ flexWrap: 'wrap' }}>
                 {teacher.grades.map((g) => (
-                  <span key={g} className="dz-chip dz-chip--sm dz-chip--orange">{gradeById(g)?.name}</span>
+                  <span key={g} className="dz-chip dz-chip--sm dz-chip--accent">{gradeById(g)?.name}</span>
                 ))}
               </div>
             </div>
@@ -138,7 +138,7 @@ export default function TeacherProfile() {
               <div className="dz-h3" style={{ marginBottom: 8 }}>لغات الشرح</div>
               <div className="dz-chiprow">
                 {teacher.languages.map((l) => (
-                  <span key={l} className="dz-chip dz-chip--sm dz-chip--blue">{languageById(l)?.name}</span>
+                  <span key={l} className="dz-chip dz-chip--sm dz-chip--primary">{languageById(l)?.name}</span>
                 ))}
               </div>
             </div>
@@ -164,8 +164,8 @@ export default function TeacherProfile() {
               </div>
             </div>
 
-            <div className="dz-card" style={{ background: 'var(--c-green-bg)', border: 'none' }}>
-              <div className="dz-row" style={{ gap: 8, color: 'var(--c-green)' }}>
+            <div className="dz-card" style={{ background: 'var(--c-success-bg)', border: 'none' }}>
+              <div className="dz-row" style={{ gap: 8, color: 'var(--c-success)' }}>
                 <IconShield size={18} />
                 <span style={{ fontSize: 13, fontWeight: 700 }}>هوية موثقة من إدارة درسي</span>
               </div>
@@ -220,7 +220,7 @@ export default function TeacherProfile() {
               )}
             </div>
 
-            <div className="dz-banner dz-banner--yellow">
+            <div className="dz-banner dz-banner--accent">
               الأسعار لكل ساعة وتشمل رسوم المنصة. يتم الدفع لحساب درسي، وتُحوَّل مستحقات المدرس بعد إتمام الحصة.
             </div>
           </div>

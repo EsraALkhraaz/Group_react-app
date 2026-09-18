@@ -1,14 +1,16 @@
 // Reference data — in production this is managed from the admin panel, not hardcoded.
 
+// Subject colors sit in the brand's family: teal and gold lead, the rest
+// are mid-saturation neighbours so a grid of cards still reads as one system.
 export const SUBJECTS = [
-  { id: 'math', name: 'الرياضيات', color: '#5FB79C' },
-  { id: 'english', name: 'اللغة الإنجليزية', color: '#EFA24B' },
-  { id: 'arabic', name: 'اللغة العربية', color: '#7E8FE0' },
-  { id: 'physics', name: 'الفيزياء', color: '#E5896F' },
-  { id: 'chemistry', name: 'الكيمياء', color: '#C58BD6' },
-  { id: 'science', name: 'العلوم', color: '#6FB1E8' },
-  { id: 'french', name: 'اللغة الفرنسية', color: '#EB7A70' },
-  { id: 'computer', name: 'الحاسوب والبرمجة', color: '#4E9AD8' },
+  { id: 'math', name: 'الرياضيات', color: '#14717A' },
+  { id: 'english', name: 'اللغة الإنجليزية', color: '#D7A24B' },
+  { id: 'arabic', name: 'اللغة العربية', color: '#7C6BA8' },
+  { id: 'physics', name: 'الفيزياء', color: '#C9704F' },
+  { id: 'chemistry', name: 'الكيمياء', color: '#4F8FA8' },
+  { id: 'science', name: 'العلوم', color: '#3F9A6A' },
+  { id: 'french', name: 'اللغة الفرنسية', color: '#B85C6E' },
+  { id: 'computer', name: 'الحاسوب والبرمجة', color: '#5B7DB1' },
 ];
 
 export const GRADES = [

@@ -42,7 +42,7 @@ export default function BookingDetails() {
       <div className="dz-body" style={{ paddingTop: 4 }}>
         {isNew && (
           <div style={{ marginBottom: 14 }}>
-            <Banner tone="green" icon={<IconCheck size={18} />}>
+            <Banner tone="success" icon={<IconCheck size={18} />}>
               تم إرسال طلبك بنجاح — بانتظار رد المدرس.
             </Banner>
           </div>
@@ -87,8 +87,8 @@ export default function BookingDetails() {
                     className="dz-avatar dz-avatar--sm"
                     style={{
                       width: 26, height: 26,
-                      background: done ? 'var(--c-green-bg)' : active ? 'var(--c-blue-bg)' : '#F2F4F9',
-                      color: done ? 'var(--c-green)' : active ? 'var(--c-blue-text)' : 'var(--c-faint)',
+                      background: done ? 'var(--c-success-bg)' : active ? 'var(--c-primary-bg)' : '#EFF4F3',
+                      color: done ? 'var(--c-success)' : active ? 'var(--c-primary-text)' : 'var(--c-faint)',
                       fontSize: 12,
                     }}
                   >
@@ -104,7 +104,7 @@ export default function BookingDetails() {
         )}
 
         {booking.status === BOOKING_STATUS.REJECTED && (
-          <Banner tone="coral">
+          <Banner tone="danger">
             اعتذر المدرس عن هذا الموعد{booking.rejectionReason ? `: ${booking.rejectionReason}` : ''}. لم يُخصم أي مبلغ.
           </Banner>
         )}
@@ -116,7 +116,7 @@ export default function BookingDetails() {
               <span className="dz-h3">رابط الجلسة</span>
             </div>
             <div className="dz-muted" style={{ wordBreak: 'break-all', marginBottom: 12 }}>{booking.meetingLink}</div>
-            <button type="button" className="dz-btn dz-btn--green dz-btn--sm" style={{ width: '100%' }}>
+            <button type="button" className="dz-btn dz-btn--success dz-btn--sm" style={{ width: '100%' }}>
               الدخول إلى الحصة
             </button>
             <div className="dz-faint" style={{ marginTop: 8, textAlign: 'center' }}>
@@ -138,7 +138,7 @@ export default function BookingDetails() {
         )}
 
         {booking.status === BOOKING_STATUS.PAYMENT_REVIEW && (
-          <Banner tone="blue" icon={<IconClock size={18} />}>
+          <Banner tone="primary" icon={<IconClock size={18} />}>
             استلمنا إيصالك ({booking.receipt?.fileName}) وتتم مراجعته من الإدارة.
           </Banner>
         )}
@@ -187,7 +187,7 @@ export default function BookingDetails() {
       </div>
 
       <Sheet open={payOpen} onClose={() => setPayOpen(false)} title="إتمام الدفع">
-        <Banner tone="yellow">
+        <Banner tone="accent">
           التحويل يتم لحساب منصة درسي، ويُحوَّل للمدرس بعد إتمام الحصة (نظام ضمان).
         </Banner>
 

@@ -37,12 +37,12 @@ export default function TeacherCard({ teacher }) {
           </span>
           <span className="dz-row" style={{ gap: 10, marginTop: 6, flexWrap: 'wrap' }}>
             {teacher.pricing.online && (
-              <span className="dz-chip dz-chip--sm dz-chip--blue">
+              <span className="dz-chip dz-chip--sm dz-chip--primary">
                 <IconVideo size={12} /> أونلاين
               </span>
             )}
             {teacher.pricing.f2f && (
-              <span className="dz-chip dz-chip--sm dz-chip--green">
+              <span className="dz-chip dz-chip--sm dz-chip--success">
                 <IconPin size={12} /> {cityById(teacher.city)?.name}
               </span>
             )}

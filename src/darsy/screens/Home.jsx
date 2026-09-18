@@ -5,6 +5,7 @@ import { IconSearch, IconBell, IconForward, IconVideo, IconPin } from '../compon
 import { SUBJECTS, subjectById } from '../data/catalog';
 import { TEACHERS, teacherById } from '../data/teachers';
 import { useApp, BOOKING_STATUS, STATUS_LABEL, STATUS_TONE } from '../state/AppContext';
+import mark from '../assets/darsy-mark.png';
 
 export default function Home() {
   const history = useHistory();
@@ -21,9 +22,7 @@ export default function Home() {
   return (
     <div className="dz-screen">
       <header className="dz-topbar">
-        <div className="dz-avatar dz-avatar--sm" style={{ background: 'var(--c-blue-bg)', color: 'var(--c-blue-text)' }}>
-          {profile.name.charAt(0)}
-        </div>
+        <img src={mark} alt="درسي" style={{ width: 34, height: 34, objectFit: 'contain' }} />
         <div className="dz-grow">
           <h1 className="dz-topbar__title">أهلاً، {profile.name.split(' ')[0]}</h1>
           <div className="dz-topbar__sub">{role === 'parent' ? `${children.length} أبناء مسجلون` : 'حساب طالب'}</div>
