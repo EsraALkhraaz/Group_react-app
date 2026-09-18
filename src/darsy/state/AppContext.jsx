@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { COMMISSION_RATE } from '../data/catalog';
+import { TEACHERS, teacherById } from '../data/teachers';
 
 const STORAGE_KEY = 'darsy.prototype.v1';
 
@@ -47,8 +48,10 @@ const seedState = () => ({
     { id: 'c2', name: 'ليان', gradeId: 'g3' },
   ],
   favorites: ['t2'],
-  // Rates a teacher changed themselves; they win over the directory's listed rates.
+  // What a teacher edited about themselves — rates and profile fields both win
+  // over what the directory lists for them.
   teacherRates: {},
+  teacherProfiles: {},
   bookings: [
     {
       id: 'b1',
@@ -132,6 +135,13 @@ const mergePricing = (teacher, override) => {
   };
   return { online: apply('online'), f2f: apply('f2f') };
 };
+
+// The directory entry is the starting point; whatever the teacher edited wins.
+const mergeTeacher = (base, profile, rates) => ({
+  ...base,
+  ...(profile || {}),
+  pricing: mergePricing(base, rates),
+});
 
 const AppContext = createContext(null);
 
@@ -234,11 +244,26 @@ export function AppProvider({ children }) {
       markNotificationsRead: () =>
         setState((s) => ({ ...s, notifications: s.notifications.map((n) => ({ ...n, unread: false })) })),
 
-      // What every screen should read — never teacher.pricing directly.
-      pricingFor: (teacher) => mergePricing(teacher, state.teacherRates[teacher.id]),
+      // What every screen should read — never the raw directory entry.
+      teacherFor: (id) => {
+        const base = teacherById(id);
+        return base ? mergeTeacher(base, state.teacherProfiles[id], state.teacherRates[id]) : null;
+      },
+
+      allTeachers: () =>
+        TEACHERS.map((t) => mergeTeacher(t, state.teacherProfiles[t.id], state.teacherRates[t.id])),
 
       setTeacherRates: (teacherId, rates) =>
         setState((s) => ({ ...s, teacherRates: { ...s.teacherRates, [teacherId]: rates } })),
+
+      setTeacherProfile: (teacherId, patch) =>
+        setState((s) => ({
+          ...s,
+          teacherProfiles: {
+            ...s.teacherProfiles,
+            [teacherId]: { ...(s.teacherProfiles[teacherId] || {}), ...patch },
+          },
+        })),
 
       resetPrototype: () => setState(seedState()),
 

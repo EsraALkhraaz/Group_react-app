@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useHistory, useParams } from 'react-router-dom';
 import { TopBar, Avatar, Stars, VerifiedMark, money, EmptyState } from '../components/common';
 import { IconBookmark, IconVideo, IconPin, IconUsers, IconPerson, IconShield } from '../components/Icons';
-import { teacherById } from '../data/teachers';
 import { subjectById, gradeById, languageById, cityById } from '../data/catalog';
 import { useApp } from '../state/AppContext';
 
@@ -34,16 +33,15 @@ function PriceRow({ icon, title, subtitle, price, unavailable }) {
 export default function TeacherProfile() {
   const { id } = useParams();
   const history = useHistory();
-  const teacher = teacherById(id);
-  const { favorites, toggleFavorite, pricingFor } = useApp();
+  const { favorites, toggleFavorite, teacherFor } = useApp();
+  const teacher = teacherFor(id);
   const [tab, setTab] = useState('info');
 
   if (!teacher) return <EmptyState title="المدرس غير موجود" body="ربما تم إيقاف الحساب." />;
 
   const saved = favorites.includes(teacher.id);
-  const pricing = pricingFor(teacher);
-  const online = pricing.online;
-  const f2f = pricing.f2f;
+  const online = teacher.pricing.online;
+  const f2f = teacher.pricing.f2f;
 
   return (
     <div className="dz-screen">

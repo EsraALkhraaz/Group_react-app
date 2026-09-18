@@ -12,6 +12,7 @@ import MyBookings from './screens/MyBookings';
 import Notifications from './screens/Notifications';
 import Profile from './screens/Profile';
 import TeacherDashboard from './screens/TeacherDashboard';
+import TeacherProfileEdit from './screens/TeacherProfileEdit';
 import './styles/theme.css';
 
 function ScrollToTop() {
@@ -34,6 +35,7 @@ export default function DarsyApp() {
             <Route path="/home" component={Home} />
             <Route path="/search" component={Search} />
             <Route path="/results" component={Results} />
+            <Route path="/teacher/edit" component={TeacherProfileEdit} />
             <Route path="/teacher/:id" component={TeacherProfile} />
             <Route path="/book/:id" component={Booking} />
             <Route path="/booking/:id" component={BookingDetails} />

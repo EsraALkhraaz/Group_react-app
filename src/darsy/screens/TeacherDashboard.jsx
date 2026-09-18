@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { TopBar, Banner, Sheet, Field, EmptyState, money, formatDate, formatTime } from '../components/common';
 import { IconCheck, IconClose, IconVideo, IconPin, IconWallet, IconUsers } from '../components/Icons';
-import { teacherById } from '../data/teachers';
 import { subjectById, COMMISSION_RATE, RATE_LIMITS } from '../data/catalog';
 import { useApp, BOOKING_STATUS, STATUS_LABEL, STATUS_TONE } from '../state/AppContext';
 
@@ -97,13 +96,13 @@ function RatesSheet({ open, onClose, pricing, onSave }) {
 
 export default function TeacherDashboard() {
   const history = useHistory();
-  const { bookings, approveBooking, rejectBooking, setRole, pricingFor, setTeacherRates } = useApp();
+  const { bookings, approveBooking, rejectBooking, setRole, teacherFor, setTeacherRates } = useApp();
   const [rejectId, setRejectId] = useState(null);
   const [reason, setReason] = useState('');
   const [ratesOpen, setRatesOpen] = useState(false);
 
-  const teacher = teacherById(ME);
-  const pricing = pricingFor(teacher);
+  const teacher = teacherFor(ME);
+  const pricing = teacher.pricing;
   const mine = bookings.filter((b) => b.teacherId === ME);
   const requests = mine.filter((b) => b.status === BOOKING_STATUS.PENDING_APPROVAL);
   const upcoming = mine.filter((b) => [BOOKING_STATUS.CONFIRMED, BOOKING_STATUS.AWAITING_PAYMENT, BOOKING_STATUS.PAYMENT_REVIEW].includes(b.status));
@@ -144,6 +143,32 @@ export default function TeacherDashboard() {
             <div className="dz-stats__lbl">التقييم</div>
           </div>
         </div>
+
+        <section style={{ marginBottom: 20 }}>
+          <div className="dz-section-title">
+            <span>ملفي الشخصي</span>
+            <button
+              type="button"
+              className="dz-btn dz-btn--ghost dz-btn--sm"
+              onClick={() => history.push('/teacher/edit')}
+            >
+              تعديل الملف
+            </button>
+          </div>
+          <div className="dz-card">
+            <div style={{ fontWeight: 800, fontSize: 15 }}>{teacher.name}</div>
+            <div className="dz-muted" style={{ marginTop: 6, lineHeight: 1.7 }}>
+              {teacher.bio.length > 120 ? `${teacher.bio.slice(0, 120)}…` : teacher.bio}
+            </div>
+            <div className="dz-chiprow" style={{ marginTop: 10, flexWrap: 'wrap' }}>
+              {teacher.subjects.map((s) => (
+                <span key={s} className="dz-chip dz-chip--sm dz-chip--primary">{subjectById(s)?.name}</span>
+              ))}
+              <span className="dz-chip dz-chip--sm dz-chip--accent">{teacher.grades.length} صفوف</span>
+              <span className="dz-chip dz-chip--sm">{teacher.qualifications.length} مؤهلات</span>
+            </div>
+          </div>
+        </section>
 
         <section style={{ marginBottom: 20 }}>
           <div className="dz-section-title"><span>طلبات بانتظار ردك</span></div>

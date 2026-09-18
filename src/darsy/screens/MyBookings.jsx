@@ -3,7 +3,6 @@ import { useHistory } from 'react-router-dom';
 import { TopBar, BottomNav, Avatar, EmptyState, formatDate, formatTime, money } from '../components/common';
 import TeacherCard from '../components/TeacherCard';
 import { IconForward, IconVideo, IconPin } from '../components/Icons';
-import { teacherById, TEACHERS } from '../data/teachers';
 import { subjectById } from '../data/catalog';
 import { useApp, BOOKING_STATUS, STATUS_LABEL, STATUS_TONE } from '../state/AppContext';
 
@@ -22,12 +21,12 @@ const UPCOMING = [
 
 export default function MyBookings() {
   const history = useHistory();
-  const { bookings, favorites } = useApp();
+  const { bookings, favorites, teacherFor, allTeachers } = useApp();
   const [tab, setTab] = useState('upcoming');
 
   const upcoming = bookings.filter((b) => UPCOMING.includes(b.status));
   const past = bookings.filter((b) => !UPCOMING.includes(b.status));
-  const saved = TEACHERS.filter((t) => favorites.includes(t.id));
+  const saved = allTeachers().filter((t) => favorites.includes(t.id));
 
   const list = tab === 'upcoming' ? upcoming : tab === 'past' ? past : [];
 
@@ -73,7 +72,7 @@ export default function MyBookings() {
               <section key={date}>
                 <div className="dz-faint" style={{ fontWeight: 700, marginBottom: 6 }}>{formatDate(date)}</div>
                 {grouped[date].map((b) => {
-                  const teacher = teacherById(b.teacherId);
+                  const teacher = teacherFor(b.teacherId);
                   return (
                     <button
                       key={b.id}

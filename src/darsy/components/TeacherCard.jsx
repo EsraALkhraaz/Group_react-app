@@ -7,8 +7,8 @@ import { useApp } from '../state/AppContext';
 
 export default function TeacherCard({ teacher }) {
   const history = useHistory();
-  const { favorites, toggleFavorite, pricingFor } = useApp();
-  const pricing = pricingFor(teacher);
+  const { favorites, toggleFavorite } = useApp();
+  const pricing = teacher.pricing;
   const saved = favorites.includes(teacher.id);
 
   const cheapest = Math.min(

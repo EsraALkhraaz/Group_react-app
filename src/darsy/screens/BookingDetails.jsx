@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useHistory, useParams, useLocation } from 'react-router-dom';
 import { TopBar, Avatar, Banner, Sheet, Field, money, formatDate, formatTime, EmptyState, Stars } from '../components/common';
 import { IconVideo, IconPin, IconCheck, IconUpload, IconClock, IconStar } from '../components/Icons';
-import { teacherById } from '../data/teachers';
 import { subjectById, PLATFORM_BANK, COMMISSION_RATE, FREE_CANCELLATION_HOURS } from '../data/catalog';
 import { useApp, BOOKING_STATUS, STATUS_LABEL, STATUS_TONE } from '../state/AppContext';
 
@@ -19,7 +18,7 @@ export default function BookingDetails() {
   const { id } = useParams();
   const history = useHistory();
   const isNew = new URLSearchParams(useLocation().search).get('new') === '1';
-  const { bookings, submitPayment, confirmPayment, cancelBooking, addReview } = useApp();
+  const { bookings, submitPayment, confirmPayment, cancelBooking, addReview, teacherFor } = useApp();
 
   const [payOpen, setPayOpen] = useState(false);
   const [receipt, setReceipt] = useState('');
@@ -30,7 +29,7 @@ export default function BookingDetails() {
   const booking = bookings.find((b) => b.id === id);
   if (!booking) return <EmptyState title="الحجز غير موجود" body="" />;
 
-  const teacher = teacherById(booking.teacherId);
+  const teacher = teacherFor(booking.teacherId);
   const commission = Math.round(booking.price * COMMISSION_RATE);
   const currentStep = order(booking.status);
   const isDead = [BOOKING_STATUS.REJECTED, BOOKING_STATUS.CANCELLED].includes(booking.status);

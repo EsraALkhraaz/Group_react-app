@@ -2,7 +2,6 @@ import React, { useMemo, useState } from 'react';
 import { useHistory, useParams } from 'react-router-dom';
 import { TopBar, Avatar, Banner, Field, money, formatDate, formatTime, EmptyState } from '../components/common';
 import { IconVideo, IconPin, IconPerson, IconUsers, IconCheck, IconClock } from '../components/Icons';
-import { teacherById } from '../data/teachers';
 import { subjectById, gradeById, COMMISSION_RATE } from '../data/catalog';
 import { monthMatrix, toISODate, slotsForDate, hasAnySlot } from '../lib/availability';
 import { useApp } from '../state/AppContext';
@@ -14,8 +13,8 @@ const MONTHS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'ماي�
 export default function Booking() {
   const { id } = useParams();
   const history = useHistory();
-  const teacher = teacherById(id);
-  const { bookings, createBooking, role, children, profile, pricingFor } = useApp();
+  const { bookings, createBooking, role, children, profile, teacherFor } = useApp();
+  const teacher = teacherFor(id);
 
   const [step, setStep] = useState(0);
   const [sessionType, setSessionType] = useState('');
@@ -35,7 +34,7 @@ export default function Booking() {
 
   if (!teacher) return <EmptyState title="المدرس غير موجود" body="" />;
 
-  const livePricing = pricingFor(teacher);
+  const livePricing = teacher.pricing;
   const pricing = livePricing[mode] || null;
   const groupConfig = pricing?.group;
   const price = sessionType === 'group' ? groupConfig?.price : pricing?.individual;

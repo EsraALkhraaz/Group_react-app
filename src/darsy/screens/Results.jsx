@@ -2,7 +2,6 @@ import React, { useMemo, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { TopBar, EmptyState, BottomNav } from '../components/common';
 import TeacherCard from '../components/TeacherCard';
-import { TEACHERS } from '../data/teachers';
 import { subjectById, gradeById, languageById, cityById } from '../data/catalog';
 import { useApp } from '../state/AppContext';
 
@@ -16,7 +15,7 @@ export default function Results() {
   const history = useHistory();
   const query = new URLSearchParams(useLocation().search);
   const [sort, setSort] = useState('rating');
-  const { pricingFor } = useApp();
+  const { allTeachers } = useApp();
 
   const filters = {
     subject: query.get('subject') || '',
@@ -28,12 +27,9 @@ export default function Results() {
   };
 
   const results = useMemo(() => {
-    const priceOf = (t) => {
-      const p = pricingFor(t);
-      return Math.min(...[p.online?.individual, p.f2f?.individual].filter(Boolean));
-    };
+    const priceOf = (t) => Math.min(...[t.pricing.online?.individual, t.pricing.f2f?.individual].filter(Boolean));
 
-    const matched = TEACHERS.filter((t) => {
+    const matched = allTeachers().filter((t) => {
       if (!t.verified) return false; // unverified teachers are never listed publicly
       if (filters.subject && !t.subjects.includes(filters.subject)) return false;
       if (filters.grade && !t.grades.includes(filters.grade)) return false;
@@ -53,7 +49,7 @@ export default function Results() {
       if (sort === 'sessions') return b.sessionsCount - a.sessionsCount;
       return b.rating - a.rating;
     });
-  }, [filters.subject, filters.grade, filters.language, filters.mode, filters.sessionType, filters.city, sort, pricingFor]);
+  }, [filters.subject, filters.grade, filters.language, filters.mode, filters.sessionType, filters.city, sort, allTeachers]);
 
   const activeFilters = [
     subjectById(filters.subject)?.name,

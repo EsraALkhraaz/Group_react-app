@@ -3,13 +3,12 @@ import { useHistory } from 'react-router-dom';
 import { BottomNav, Avatar, formatDate, formatTime, money } from '../components/common';
 import { IconSearch, IconBell, IconForward, IconVideo, IconPin } from '../components/Icons';
 import { SUBJECTS, subjectById } from '../data/catalog';
-import { TEACHERS, teacherById } from '../data/teachers';
 import { useApp, BOOKING_STATUS, STATUS_LABEL, STATUS_TONE } from '../state/AppContext';
 import mark from '../assets/darsy-mark.png';
 
 export default function Home() {
   const history = useHistory();
-  const { profile, role, bookings, notifications, children, pricingFor } = useApp();
+  const { profile, role, bookings, notifications, children, teacherFor, allTeachers } = useApp();
 
   const unread = notifications.filter((n) => n.unread).length;
   const upcoming = bookings
@@ -17,7 +16,7 @@ export default function Home() {
     .sort((a, b) => (a.date < b.date ? -1 : 1))
     .slice(0, 3);
 
-  const topRated = [...TEACHERS].sort((a, b) => b.rating - a.rating).slice(0, 4);
+  const topRated = [...allTeachers()].sort((a, b) => b.rating - a.rating).slice(0, 4);
 
   return (
     <div className="dz-screen">
@@ -60,7 +59,7 @@ export default function Home() {
             </div>
             <div className="dz-stack dz-stack--sm">
               {upcoming.map((b) => {
-                const teacher = teacherById(b.teacherId);
+                const teacher = teacherFor(b.teacherId);
                 return (
                   <button
                     key={b.id}
@@ -136,7 +135,7 @@ export default function Home() {
                 <div className="dz-row dz-row--between" style={{ marginTop: 4 }}>
                   <span className="dz-faint">⭐ {t.rating.toFixed(1)}</span>
                   <span style={{ fontSize: 12, fontWeight: 800 }}>
-                    {money(pricingFor(t).online?.individual || pricingFor(t).f2f?.individual)}
+                    {money(t.pricing.online?.individual || t.pricing.f2f?.individual)}
                   </span>
                 </div>
               </button>
