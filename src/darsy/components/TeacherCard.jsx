@@ -7,11 +7,12 @@ import { useApp } from '../state/AppContext';
 
 export default function TeacherCard({ teacher }) {
   const history = useHistory();
-  const { favorites, toggleFavorite } = useApp();
+  const { favorites, toggleFavorite, pricingFor } = useApp();
+  const pricing = pricingFor(teacher);
   const saved = favorites.includes(teacher.id);
 
   const cheapest = Math.min(
-    ...[teacher.pricing.online?.individual, teacher.pricing.f2f?.individual].filter(Boolean),
+    ...[pricing.online?.individual, pricing.f2f?.individual].filter(Boolean),
   );
 
   return (
@@ -36,12 +37,12 @@ export default function TeacherCard({ teacher }) {
             <span className="dz-faint">({teacher.reviewsCount} تقييم)</span>
           </span>
           <span className="dz-row" style={{ gap: 10, marginTop: 6, flexWrap: 'wrap' }}>
-            {teacher.pricing.online && (
+            {pricing.online && (
               <span className="dz-chip dz-chip--sm dz-chip--primary">
                 <IconVideo size={12} /> أونلاين
               </span>
             )}
-            {teacher.pricing.f2f && (
+            {pricing.f2f && (
               <span className="dz-chip dz-chip--sm dz-chip--success">
                 <IconPin size={12} /> {cityById(teacher.city)?.name}
               </span>

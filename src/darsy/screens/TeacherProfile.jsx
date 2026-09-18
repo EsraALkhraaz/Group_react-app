@@ -35,14 +35,15 @@ export default function TeacherProfile() {
   const { id } = useParams();
   const history = useHistory();
   const teacher = teacherById(id);
-  const { favorites, toggleFavorite } = useApp();
+  const { favorites, toggleFavorite, pricingFor } = useApp();
   const [tab, setTab] = useState('info');
 
   if (!teacher) return <EmptyState title="المدرس غير موجود" body="ربما تم إيقاف الحساب." />;
 
   const saved = favorites.includes(teacher.id);
-  const online = teacher.pricing.online;
-  const f2f = teacher.pricing.f2f;
+  const pricing = pricingFor(teacher);
+  const online = pricing.online;
+  const f2f = pricing.f2f;
 
   return (
     <div className="dz-screen">

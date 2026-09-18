@@ -1,21 +1,109 @@
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { TopBar, Banner, Sheet, Field, EmptyState, money, formatDate, formatTime } from '../components/common';
-import { IconCheck, IconClose, IconVideo, IconPin, IconWallet } from '../components/Icons';
+import { IconCheck, IconClose, IconVideo, IconPin, IconWallet, IconUsers } from '../components/Icons';
 import { teacherById } from '../data/teachers';
-import { subjectById, COMMISSION_RATE } from '../data/catalog';
+import { subjectById, COMMISSION_RATE, RATE_LIMITS } from '../data/catalog';
 import { useApp, BOOKING_STATUS, STATUS_LABEL, STATUS_TONE } from '../state/AppContext';
 
 // The prototype puts the signed-in teacher in Ahmed's seat.
 const ME = 't1';
 
+function RateRow({ icon, label, value }) {
+  return (
+    <div className="dz-row" style={{ padding: '10px 0', borderBottom: '1px solid var(--c-line)' }}>
+      <span className="dz-avatar dz-avatar--sm" style={{ width: 30, height: 30, background: 'var(--c-soft)', color: 'var(--c-primary-text)' }}>
+        {icon}
+      </span>
+      <span className="dz-grow" style={{ fontSize: 13, fontWeight: 600 }}>{label}</span>
+      <span className="dz-price">{money(value)}<small>للساعة</small></span>
+    </div>
+  );
+}
+
+function RateInput({ label, value, onChange }) {
+  return (
+    <Field label={label} hint={`بين ${RATE_LIMITS.min} و${RATE_LIMITS.max} د.ل`}>
+      <input
+        className="dz-input"
+        type="number"
+        inputMode="numeric"
+        min={RATE_LIMITS.min}
+        max={RATE_LIMITS.max}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </Field>
+  );
+}
+
+function RatesSheet({ open, onClose, pricing, onSave }) {
+  const [draft, setDraft] = useState({});
+
+  // Seed the form from the teacher's live rates each time the sheet opens.
+  React.useEffect(() => {
+    if (!open) return;
+    setDraft({
+      onlineIndividual: pricing.online?.individual ?? '',
+      onlineGroup: pricing.online?.group?.price ?? '',
+      f2fIndividual: pricing.f2f?.individual ?? '',
+      f2fGroup: pricing.f2f?.group?.price ?? '',
+    });
+  }, [open, pricing]);
+
+  const set = (key) => (v) => setDraft((d) => ({ ...d, [key]: v }));
+
+  const entered = Object.entries(draft)
+    .filter(([, v]) => v !== '' && v !== null)
+    .map(([, v]) => Number(v));
+  const valid = entered.length > 0
+    && entered.every((n) => Number.isFinite(n) && n >= RATE_LIMITS.min && n <= RATE_LIMITS.max);
+
+  const save = () => {
+    const num = (v) => (v === '' || v === null ? undefined : Number(v));
+    onSave({
+      online: { individual: num(draft.onlineIndividual), group: num(draft.onlineGroup) },
+      f2f: { individual: num(draft.f2fIndividual), group: num(draft.f2fGroup) },
+    });
+  };
+
+  return (
+    <Sheet open={open} onClose={onClose} title="تعديل أسعاري">
+      <div className="dz-stack">
+        {pricing.online && (
+          <RateInput label="حصة أونلاين — فردية" value={draft.onlineIndividual} onChange={set('onlineIndividual')} />
+        )}
+        {pricing.online?.group && (
+          <RateInput label="حصة أونلاين — جماعية (للطالب)" value={draft.onlineGroup} onChange={set('onlineGroup')} />
+        )}
+        {pricing.f2f && (
+          <RateInput label="حصة حضورية — فردية" value={draft.f2fIndividual} onChange={set('f2fIndividual')} />
+        )}
+        {pricing.f2f?.group && (
+          <RateInput label="حصة حضورية — جماعية (للطالب)" value={draft.f2fGroup} onChange={set('f2fGroup')} />
+        )}
+
+        <Banner tone="accent">
+          تسري الأسعار الجديدة على الحجوزات القادمة فقط — الحجوزات المؤكدة تبقى بسعرها الأصلي.
+        </Banner>
+
+        <button type="button" className="dz-btn dz-btn--primary" disabled={!valid} onClick={save}>
+          حفظ الأسعار
+        </button>
+      </div>
+    </Sheet>
+  );
+}
+
 export default function TeacherDashboard() {
   const history = useHistory();
-  const { bookings, approveBooking, rejectBooking, setRole } = useApp();
+  const { bookings, approveBooking, rejectBooking, setRole, pricingFor, setTeacherRates } = useApp();
   const [rejectId, setRejectId] = useState(null);
   const [reason, setReason] = useState('');
+  const [ratesOpen, setRatesOpen] = useState(false);
 
   const teacher = teacherById(ME);
+  const pricing = pricingFor(teacher);
   const mine = bookings.filter((b) => b.teacherId === ME);
   const requests = mine.filter((b) => b.status === BOOKING_STATUS.PENDING_APPROVAL);
   const upcoming = mine.filter((b) => [BOOKING_STATUS.CONFIRMED, BOOKING_STATUS.AWAITING_PAYMENT, BOOKING_STATUS.PAYMENT_REVIEW].includes(b.status));
@@ -130,6 +218,40 @@ export default function TeacherDashboard() {
         </section>
 
         <section>
+          <div className="dz-section-title">
+            <span>أسعاري</span>
+            <button
+              type="button"
+              className="dz-btn dz-btn--ghost dz-btn--sm"
+              onClick={() => setRatesOpen(true)}
+            >
+              تعديل الأسعار
+            </button>
+          </div>
+          <div className="dz-card" style={{ marginBottom: 20 }}>
+            {pricing.online ? (
+              <>
+                <RateRow icon={<IconVideo size={15} />} label="أونلاين — فردية" value={pricing.online.individual} />
+                {pricing.online.group && (
+                  <RateRow icon={<IconUsers size={15} />} label="أونلاين — جماعية" value={pricing.online.group.price} />
+                )}
+              </>
+            ) : null}
+            {pricing.f2f ? (
+              <>
+                <RateRow icon={<IconPin size={15} />} label="حضوري — فردية" value={pricing.f2f.individual} />
+                {pricing.f2f.group && (
+                  <RateRow icon={<IconUsers size={15} />} label="حضوري — جماعية" value={pricing.f2f.group.price} />
+                )}
+              </>
+            ) : null}
+            <div className="dz-faint" style={{ marginTop: 8 }}>
+              أنت من يحدد سعر ساعتك. يظهر السعر للطلاب في نتائج البحث وفي ملفك، وتُخصم منه عمولة المنصة.
+            </div>
+          </div>
+        </section>
+
+        <section>
           <div className="dz-section-title"><span>أرباحي</span></div>
           <div className="dz-card">
             <div className="dz-row" style={{ marginBottom: 10 }}>
@@ -145,6 +267,16 @@ export default function TeacherDashboard() {
           </div>
         </section>
       </div>
+
+      <RatesSheet
+        open={ratesOpen}
+        onClose={() => setRatesOpen(false)}
+        pricing={pricing}
+        onSave={(rates) => {
+          setTeacherRates(ME, rates);
+          setRatesOpen(false);
+        }}
+      />
 
       <Sheet open={Boolean(rejectId)} onClose={() => setRejectId(null)} title="الاعتذار عن الطلب">
         <div className="dz-muted" style={{ marginBottom: 12 }}>

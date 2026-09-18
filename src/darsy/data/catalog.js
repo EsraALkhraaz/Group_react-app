@@ -45,12 +45,15 @@ export const CITIES = [
   { id: 'bayda', name: 'البيضاء' },
 ];
 
-// Platform-standard hourly rates in LYD — one place to change them.
-// Group seats stay cheaper per learner; seat limits remain per teacher.
-export const SESSION_RATES = {
+// Hourly rates in LYD suggested to a teacher when they join.
+// Every teacher sets their own rates afterwards — these are only a starting point.
+export const DEFAULT_RATES = {
   online: { individual: 30, group: 20 },
   f2f: { individual: 50, group: 30 },
 };
+
+// Guard rails the admin panel enforces on whatever a teacher enters.
+export const RATE_LIMITS = { min: 10, max: 200 };
 
 // Platform commission — configurable from the admin panel, never fixed in product code.
 export const COMMISSION_RATE = 0.15;

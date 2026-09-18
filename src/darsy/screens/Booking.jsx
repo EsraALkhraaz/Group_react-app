@@ -15,7 +15,7 @@ export default function Booking() {
   const { id } = useParams();
   const history = useHistory();
   const teacher = teacherById(id);
-  const { bookings, createBooking, role, children, profile } = useApp();
+  const { bookings, createBooking, role, children, profile, pricingFor } = useApp();
 
   const [step, setStep] = useState(0);
   const [sessionType, setSessionType] = useState('');
@@ -35,17 +35,18 @@ export default function Booking() {
 
   if (!teacher) return <EmptyState title="المدرس غير موجود" body="" />;
 
-  const pricing = teacher.pricing[mode] || null;
+  const livePricing = pricingFor(teacher);
+  const pricing = livePricing[mode] || null;
   const groupConfig = pricing?.group;
   const price = sessionType === 'group' ? groupConfig?.price : pricing?.individual;
 
   const modesAvailable = [
-    teacher.pricing.online && { id: 'online', label: 'أونلاين', icon: <IconVideo size={18} />, hint: 'رابط الجلسة يصلك بعد تأكيد الحجز' },
-    teacher.pricing.f2f && { id: 'f2f', label: 'حضوري', icon: <IconPin size={18} />, hint: `في ${teacher.areas.join('، ') || 'مناطق المدرس'}` },
+    livePricing.online && { id: 'online', label: 'أونلاين', icon: <IconVideo size={18} />, hint: 'رابط الجلسة يصلك بعد تأكيد الحجز' },
+    livePricing.f2f && { id: 'f2f', label: 'حضوري', icon: <IconPin size={18} />, hint: `في ${teacher.areas.join('، ') || 'مناطق المدرس'}` },
   ].filter(Boolean);
 
   const typeAvailableIn = (type) =>
-    Boolean(teacher.pricing.online?.[type === 'group' ? 'group' : 'individual'] || teacher.pricing.f2f?.[type === 'group' ? 'group' : 'individual']);
+    Boolean(livePricing.online?.[type === 'group' ? 'group' : 'individual'] || livePricing.f2f?.[type === 'group' ? 'group' : 'individual']);
 
   const canContinue = [
     Boolean(sessionType),
@@ -157,8 +158,8 @@ export default function Booking() {
             <div className="dz-h3">اختر نمط الحصة</div>
             {modesAvailable.map((m) => {
               const supported = sessionType === 'group'
-                ? Boolean(teacher.pricing[m.id]?.group)
-                : Boolean(teacher.pricing[m.id]?.individual);
+                ? Boolean(livePricing[m.id]?.group)
+                : Boolean(livePricing[m.id]?.individual);
               return (
                 <button
                   key={m.id}
@@ -183,7 +184,7 @@ export default function Booking() {
                   </span>
                   {supported && (
                     <span className="dz-price">
-                      {money(sessionType === 'group' ? teacher.pricing[m.id].group.price : teacher.pricing[m.id].individual)}
+                      {money(sessionType === 'group' ? livePricing[m.id].group.price : livePricing[m.id].individual)}
                       <small>للساعة</small>
                     </span>
                   )}

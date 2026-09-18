@@ -9,7 +9,7 @@ import mark from '../assets/darsy-mark.png';
 
 export default function Home() {
   const history = useHistory();
-  const { profile, role, bookings, notifications, children } = useApp();
+  const { profile, role, bookings, notifications, children, pricingFor } = useApp();
 
   const unread = notifications.filter((n) => n.unread).length;
   const upcoming = bookings
@@ -136,7 +136,7 @@ export default function Home() {
                 <div className="dz-row dz-row--between" style={{ marginTop: 4 }}>
                   <span className="dz-faint">⭐ {t.rating.toFixed(1)}</span>
                   <span style={{ fontSize: 12, fontWeight: 800 }}>
-                    {money(t.pricing.online?.individual || t.pricing.f2f?.individual)}
+                    {money(pricingFor(t).online?.individual || pricingFor(t).f2f?.individual)}
                   </span>
                 </div>
               </button>

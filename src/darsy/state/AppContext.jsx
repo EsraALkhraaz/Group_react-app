@@ -47,6 +47,8 @@ const seedState = () => ({
     { id: 'c2', name: 'ليان', gradeId: 'g3' },
   ],
   favorites: ['t2'],
+  // Rates a teacher changed themselves; they win over the directory's listed rates.
+  teacherRates: {},
   bookings: [
     {
       id: 'b1',
@@ -113,6 +115,22 @@ const load = () => {
     /* storage unavailable — fall back to seed */
   }
   return seedState();
+};
+
+// A teacher's own rates override the listed ones, keeping the modes and seat
+// limits they offer untouched.
+const mergePricing = (teacher, override) => {
+  if (!override) return teacher.pricing;
+  const apply = (mode) => {
+    const base = teacher.pricing[mode];
+    if (!base) return null;
+    const edited = override[mode] || {};
+    return {
+      individual: edited.individual ?? base.individual,
+      group: base.group ? { ...base.group, price: edited.group ?? base.group.price } : null,
+    };
+  };
+  return { online: apply('online'), f2f: apply('f2f') };
 };
 
 const AppContext = createContext(null);
@@ -215,6 +233,12 @@ export function AppProvider({ children }) {
 
       markNotificationsRead: () =>
         setState((s) => ({ ...s, notifications: s.notifications.map((n) => ({ ...n, unread: false })) })),
+
+      // What every screen should read — never teacher.pricing directly.
+      pricingFor: (teacher) => mergePricing(teacher, state.teacherRates[teacher.id]),
+
+      setTeacherRates: (teacherId, rates) =>
+        setState((s) => ({ ...s, teacherRates: { ...s.teacherRates, [teacherId]: rates } })),
 
       resetPrototype: () => setState(seedState()),
 
