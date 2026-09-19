@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { BottomNav, TopBar, Field } from '../components/common';
 import { SUBJECTS, GRADES, LANGUAGES, CITIES } from '../data/catalog';
+import { useApp } from '../state/AppContext';
 
 export default function Search() {
   const history = useHistory();
+  const { base } = useApp();
   const [subject, setSubject] = useState('');
   const [grade, setGrade] = useState('');
   const [language, setLanguage] = useState('');
@@ -21,7 +23,7 @@ export default function Search() {
     if (mode) params.set('mode', mode);
     if (sessionType) params.set('sessionType', sessionType);
     if (city) params.set('city', city);
-    history.push(`/results?${params.toString()}`);
+    history.push(`${base}/results?${params.toString()}`);
   };
 
   return (

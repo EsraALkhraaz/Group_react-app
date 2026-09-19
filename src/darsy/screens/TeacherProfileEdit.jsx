@@ -66,7 +66,7 @@ export default function TeacherProfileEdit() {
       areas: areas.split(/[،,]/).map((a) => a.trim()).filter(Boolean),
     });
     setSaved(true);
-    window.setTimeout(() => history.push('/teacher'), 700);
+    window.setTimeout(() => history.push('/teacher/account'), 700);
   };
 
   return (
@@ -75,12 +75,12 @@ export default function TeacherProfileEdit() {
         back
         title="ملفي الشخصي"
         subtitle="ما يراه الطلاب عنك"
-        onBack={() => history.push('/teacher')}
+        onBack={() => history.push('/teacher/account')}
         right={
           <button
             type="button"
             className="dz-btn dz-btn--ghost dz-btn--sm"
-            onClick={() => history.push(`/teacher/${ME}`)}
+            onClick={() => history.push('/teacher/preview')}
           >
             معاينة
           </button>

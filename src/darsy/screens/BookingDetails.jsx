@@ -18,7 +18,7 @@ export default function BookingDetails() {
   const { id } = useParams();
   const history = useHistory();
   const isNew = new URLSearchParams(useLocation().search).get('new') === '1';
-  const { bookings, submitPayment, confirmPayment, cancelBooking, addReview, teacherFor } = useApp();
+  const { bookings, submitPayment, confirmPayment, cancelBooking, addReview, teacherFor, base } = useApp();
 
   const [payOpen, setPayOpen] = useState(false);
   const [receipt, setReceipt] = useState('');
@@ -36,7 +36,7 @@ export default function BookingDetails() {
 
   return (
     <div className="dz-screen">
-      <TopBar back title="تفاصيل الحجز" subtitle={`رقم الحجز ${booking.id.slice(-6)}`} onBack={() => history.push('/bookings')} />
+      <TopBar back title="تفاصيل الحجز" subtitle={`رقم الحجز ${booking.id.slice(-6)}`} onBack={() => history.push(`${base}/bookings`)} />
 
       <div className="dz-body" style={{ paddingTop: 4 }}>
         {isNew && (

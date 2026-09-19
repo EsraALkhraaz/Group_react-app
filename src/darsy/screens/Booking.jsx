@@ -13,7 +13,7 @@ const MONTHS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'ماي�
 export default function Booking() {
   const { id } = useParams();
   const history = useHistory();
-  const { bookings, createBooking, role, children, profile, teacherFor } = useApp();
+  const { bookings, createBooking, role, children, profile, teacherFor, base, activeChild } = useApp();
   const teacher = teacherFor(id);
 
   const [step, setStep] = useState(0);
@@ -22,7 +22,9 @@ export default function Booking() {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [subjectId, setSubjectId] = useState(teacher ? teacher.subjects[0] : '');
-  const [learner, setLearner] = useState(role === 'parent' ? children[0]?.name : profile.name);
+  const [learner, setLearner] = useState(
+    role === 'parent' ? activeChild || children[0]?.name : profile.name,
+  );
   const [note, setNote] = useState('');
   const [cursor, setCursor] = useState(() => new Date());
 
@@ -71,7 +73,7 @@ export default function Booking() {
       price,
       note,
     });
-    history.replace(`/booking/${bookingId}?new=1`);
+    history.replace(`${base}/booking/${bookingId}?new=1`);
   };
 
   const goBack = () => {

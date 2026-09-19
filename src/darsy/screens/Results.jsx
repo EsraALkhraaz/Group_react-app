@@ -15,7 +15,7 @@ export default function Results() {
   const history = useHistory();
   const query = new URLSearchParams(useLocation().search);
   const [sort, setSort] = useState('rating');
-  const { allTeachers } = useApp();
+  const { allTeachers, base } = useApp();
 
   const filters = {
     subject: query.get('subject') || '',
@@ -67,7 +67,7 @@ export default function Results() {
         title="المدرسون المتاحون"
         subtitle={`${results.length} مدرس مطابق لبحثك`}
         right={
-          <button type="button" className="dz-btn dz-btn--ghost dz-btn--sm" onClick={() => history.push('/search')}>
+          <button type="button" className="dz-btn dz-btn--ghost dz-btn--sm" onClick={() => history.push(`${base}/search`)}>
             تعديل البحث
           </button>
         }

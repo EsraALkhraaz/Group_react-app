@@ -1,6 +1,7 @@
 import React from 'react';
 import { useHistory } from 'react-router-dom';
-import { IconBack, IconStar, IconVerified, IconHome, IconCalendar, IconCap, IconUser, IconGrid } from './Icons';
+import { IconBack, IconStar, IconVerified, IconHome, IconCalendar, IconCap, IconUser, IconUsers, IconInbox } from './Icons';
+import { useApp } from '../state/AppContext';
 
 export function TopBar({ title, subtitle, back, pastel, right, onBack }) {
   const history = useHistory();
@@ -89,24 +90,41 @@ export function EmptyState({ title, body }) {
   );
 }
 
-const NAV = [
-  { key: 'home', label: 'الرئيسية', path: '/home', Icon: IconHome },
-  { key: 'bookings', label: 'حجوزاتي', path: '/bookings', Icon: IconCalendar },
-  { key: 'search', label: 'المدرسون', path: '/search', Icon: IconCap },
-  { key: 'profile', label: 'حسابي', path: '/profile', Icon: IconUser },
-  { key: 'more', label: 'المزيد', path: '/more', Icon: IconGrid },
-];
+// Each interface has its own tabs; nothing links across the three.
+const NAV_BY_ROLE = {
+  student: [
+    { key: 'home', label: 'الرئيسية', path: '/home', Icon: IconHome },
+    { key: 'search', label: 'المدرسون', path: '/search', Icon: IconCap },
+    { key: 'bookings', label: 'حصصي', path: '/bookings', Icon: IconCalendar },
+    { key: 'account', label: 'حسابي', path: '/account', Icon: IconUser },
+  ],
+  parent: [
+    { key: 'home', label: 'الرئيسية', path: '/home', Icon: IconHome },
+    { key: 'children', label: 'أبنائي', path: '/children', Icon: IconUsers },
+    { key: 'bookings', label: 'الحجوزات', path: '/bookings', Icon: IconCalendar },
+    { key: 'account', label: 'حسابي', path: '/account', Icon: IconUser },
+  ],
+  teacher: [
+    { key: 'home', label: 'لوحتي', path: '/home', Icon: IconHome },
+    { key: 'requests', label: 'الطلبات', path: '/requests', Icon: IconInbox },
+    { key: 'schedule', label: 'جدولي', path: '/schedule', Icon: IconCalendar },
+    { key: 'account', label: 'ملفي', path: '/account', Icon: IconUser },
+  ],
+};
 
 export function BottomNav({ active }) {
   const history = useHistory();
+  const { role, base } = useApp();
+  const items = NAV_BY_ROLE[role] || NAV_BY_ROLE.student;
+
   return (
     <nav className="dz-nav">
-      {NAV.map(({ key, label, path, Icon }) => (
+      {items.map(({ key, label, path, Icon }) => (
         <button
           key={key}
           type="button"
           className={`dz-nav__item${active === key ? ' dz-nav__item--active' : ''}`}
-          onClick={() => history.push(path)}
+          onClick={() => history.push(`${base}${path}`)}
         >
           <Icon size={20} />
           <span>{label}</span>

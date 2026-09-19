@@ -82,6 +82,9 @@ export const IconUpload = (p) => (
 export const IconClock = (p) => (
   <svg {...base(p)}><circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15.5 14" /></svg>
 );
+export const IconInbox = (p) => (
+  <svg {...base(p)}><path d="M3 13h5l1.5 2.5h5L16 13h5" /><path d="M4.6 5.5h14.8l1.6 7.5v5.5a1.5 1.5 0 0 1-1.5 1.5H4.5A1.5 1.5 0 0 1 3 18.5V13z" /></svg>
+);
 export const IconShield = (p) => (
   <svg {...base(p)}><path d="M12 3l7 3v6c0 4.2-3 7.7-7 9-4-1.3-7-4.8-7-9V6z" /><polyline points="9 12 11.2 14.2 15 10.4" /></svg>
 );

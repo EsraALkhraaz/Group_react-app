@@ -4,6 +4,9 @@ import { TEACHERS, teacherById } from '../data/teachers';
 
 const STORAGE_KEY = 'darsy.prototype.v1';
 
+// Each role is its own interface with its own entrance and URL space.
+export const BASE_BY_ROLE = { student: '/student', parent: '/parent', teacher: '/teacher' };
+
 export const BOOKING_STATUS = {
   PENDING_APPROVAL: 'pending_approval',
   REJECTED: 'rejected',
@@ -48,6 +51,7 @@ const seedState = () => ({
     { id: 'c2', name: 'ليان', gradeId: 'g3' },
   ],
   favorites: ['t2'],
+  activeChild: null,
   // What a teacher edited about themselves — rates and profile fields both win
   // over what the directory lists for them.
   teacherRates: {},
@@ -172,7 +176,20 @@ export function AppProvider({ children }) {
     return {
       ...state,
 
+      base: BASE_BY_ROLE[state.role] || BASE_BY_ROLE.student,
+
       setRole: (role) => setState((s) => ({ ...s, role })),
+
+      addChild: (name, gradeId) =>
+        setState((s) => ({
+          ...s,
+          children: [...s.children, { id: `c${Date.now()}`, name: name.trim(), gradeId }],
+        })),
+
+      setActiveChild: (name) => setState((s) => ({ ...s, activeChild: name })),
+
+      removeChild: (id) =>
+        setState((s) => ({ ...s, children: s.children.filter((c) => c.id !== id) })),
 
       toggleFavorite: (teacherId) =>
         setState((s) => ({

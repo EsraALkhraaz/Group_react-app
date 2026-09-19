@@ -30,10 +30,11 @@ function PriceRow({ icon, title, subtitle, price, unavailable }) {
   );
 }
 
-export default function TeacherProfile() {
-  const { id } = useParams();
+export default function TeacherProfile({ teacherId }) {
+  const { id: routeId } = useParams();
+  const id = teacherId || routeId;
   const history = useHistory();
-  const { favorites, toggleFavorite, teacherFor } = useApp();
+  const { favorites, toggleFavorite, teacherFor, base } = useApp();
   const teacher = teacherFor(id);
   const [tab, setTab] = useState('info');
 
@@ -248,7 +249,7 @@ export default function TeacherProfile() {
       </div>
 
       <div className="dz-footer-cta">
-        <button type="button" className="dz-btn dz-btn--primary" onClick={() => history.push(`/book/${teacher.id}`)}>
+        <button type="button" className="dz-btn dz-btn--primary" onClick={() => history.push(`${base}/book/${teacher.id}`)}>
           احجز جلسة
         </button>
       </div>

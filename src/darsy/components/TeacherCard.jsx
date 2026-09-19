@@ -7,7 +7,7 @@ import { useApp } from '../state/AppContext';
 
 export default function TeacherCard({ teacher }) {
   const history = useHistory();
-  const { favorites, toggleFavorite } = useApp();
+  const { favorites, toggleFavorite, base } = useApp();
   const pricing = teacher.pricing;
   const saved = favorites.includes(teacher.id);
 
@@ -21,7 +21,7 @@ export default function TeacherCard({ teacher }) {
         type="button"
         className="dz-row dz-grow"
         style={{ background: 'none', border: 'none', padding: 0, textAlign: 'start', alignItems: 'flex-start', gap: 12 }}
-        onClick={() => history.push(`/teacher/${teacher.id}`)}
+        onClick={() => history.push(`${base}/teacher/${teacher.id}`)}
       >
         <Avatar teacher={teacher} />
         <span className="dz-grow">

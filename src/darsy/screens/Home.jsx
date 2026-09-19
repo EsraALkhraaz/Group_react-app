@@ -8,7 +8,7 @@ import mark from '../assets/darsy-mark.png';
 
 export default function Home() {
   const history = useHistory();
-  const { profile, role, bookings, notifications, children, teacherFor, allTeachers } = useApp();
+  const { base, profile, role, bookings, notifications, children, teacherFor, allTeachers } = useApp();
 
   const unread = notifications.filter((n) => n.unread).length;
   const upcoming = bookings
@@ -26,10 +26,10 @@ export default function Home() {
           <h1 className="dz-topbar__title">أهلاً، {profile.name.split(' ')[0]}</h1>
           <div className="dz-topbar__sub">{role === 'parent' ? `${children.length} أبناء مسجلون` : 'حساب طالب'}</div>
         </div>
-        <button type="button" className="dz-iconbtn" aria-label="بحث" onClick={() => history.push('/search')}>
+        <button type="button" className="dz-iconbtn" aria-label="بحث" onClick={() => history.push(`${base}/search`)}>
           <IconSearch size={17} />
         </button>
-        <button type="button" className="dz-iconbtn" aria-label="الإشعارات" onClick={() => history.push('/notifications')}>
+        <button type="button" className="dz-iconbtn" aria-label="الإشعارات" onClick={() => history.push(`${base}/notifications`)}>
           <IconBell size={17} />
           {unread > 0 && <span className="dz-iconbtn__dot" />}
         </button>
@@ -38,7 +38,7 @@ export default function Home() {
       <div className="dz-body">
         <button
           type="button"
-          onClick={() => history.push('/search')}
+          onClick={() => history.push(`${base}/search`)}
           className="dz-card dz-card--raised"
           style={{ width: '100%', textAlign: 'start', marginBottom: 18, border: 'none' }}
         >
@@ -53,7 +53,7 @@ export default function Home() {
           <section style={{ marginBottom: 20 }}>
             <div className="dz-section-title">
               <span>حصصك القادمة</span>
-              <button type="button" className="dz-faint" style={{ background: 'none', border: 'none' }} onClick={() => history.push('/bookings')}>
+              <button type="button" className="dz-faint" style={{ background: 'none', border: 'none' }} onClick={() => history.push(`${base}/bookings`)}>
                 عرض الكل
               </button>
             </div>
@@ -66,7 +66,7 @@ export default function Home() {
                     type="button"
                     className="dz-card dz-card--soft dz-row"
                     style={{ width: '100%', textAlign: 'start', border: 'none' }}
-                    onClick={() => history.push(`/booking/${b.id}`)}
+                    onClick={() => history.push(`${base}/booking/${b.id}`)}
                   >
                     <Avatar teacher={teacher} />
                     <span className="dz-grow">
@@ -100,7 +100,7 @@ export default function Home() {
                 key={s.id}
                 type="button"
                 className="dz-chip"
-                onClick={() => history.push(`/results?subject=${s.id}`)}
+                onClick={() => history.push(`${base}/results?subject=${s.id}`)}
               >
                 <span style={{ width: 8, height: 8, borderRadius: 4, background: s.color }} />
                 {s.name}
@@ -112,7 +112,7 @@ export default function Home() {
         <section>
           <div className="dz-section-title">
             <span>الأعلى تقييمًا</span>
-            <button type="button" className="dz-faint" style={{ background: 'none', border: 'none' }} onClick={() => history.push('/results')}>
+            <button type="button" className="dz-faint" style={{ background: 'none', border: 'none' }} onClick={() => history.push(`${base}/results`)}>
               عرض الكل
             </button>
           </div>
@@ -123,7 +123,7 @@ export default function Home() {
                 type="button"
                 className="dz-card"
                 style={{ textAlign: 'start', padding: 12 }}
-                onClick={() => history.push(`/teacher/${t.id}`)}
+                onClick={() => history.push(`${base}/teacher/${t.id}`)}
               >
                 <div
                   className="dz-thumb"

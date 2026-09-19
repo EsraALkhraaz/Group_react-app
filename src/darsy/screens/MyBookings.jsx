@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import { TopBar, BottomNav, Avatar, EmptyState, formatDate, formatTime, money } from '../components/common';
 import TeacherCard from '../components/TeacherCard';
 import { IconForward, IconVideo, IconPin } from '../components/Icons';
@@ -21,7 +21,9 @@ const UPCOMING = [
 
 export default function MyBookings() {
   const history = useHistory();
-  const { bookings, favorites, teacherFor, allTeachers } = useApp();
+  const { bookings: all, favorites, teacherFor, allTeachers, base } = useApp();
+  const childFilter = new URLSearchParams(useLocation().search).get('child');
+  const bookings = childFilter ? all.filter((b) => b.learnerName === childFilter) : all;
   const [tab, setTab] = useState('upcoming');
 
   const upcoming = bookings.filter((b) => UPCOMING.includes(b.status));
@@ -37,7 +39,7 @@ export default function MyBookings() {
 
   return (
     <div className="dz-screen">
-      <TopBar title="حجوزاتي" subtitle={`${upcoming.length} حجز قادم`} />
+      <TopBar title={childFilter ? `حصص ${childFilter}` : 'الحجوزات'} subtitle={`${upcoming.length} حجز قادم`} back={Boolean(childFilter)} />
 
       <div className="dz-tabs">
         {TABS.map((t) => (
@@ -78,7 +80,7 @@ export default function MyBookings() {
                       key={b.id}
                       type="button"
                       className="dz-listrow"
-                      onClick={() => history.push(`/booking/${b.id}`)}
+                      onClick={() => history.push(`${base}/booking/${b.id}`)}
                     >
                       <Avatar teacher={teacher} size="sm" />
                       <span className="dz-grow">
