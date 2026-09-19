@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useHistory, useParams, useLocation } from 'react-router-dom';
 import { TopBar, Avatar, Banner, Sheet, Field, money, formatDate, formatTime, EmptyState, Stars } from '../components/common';
 import { IconVideo, IconPin, IconCheck, IconUpload, IconClock, IconStar } from '../components/Icons';
-import { subjectById, PLATFORM_BANK, FREE_CANCELLATION_HOURS } from '../data/catalog';
-import { percent } from '../lib/money';
+import { subjectById, PLATFORM_BANK } from '../data/catalog';
+import { percent, cancellationOutcome } from '../lib/money';
 import { useApp, BOOKING_STATUS, STATUS_LABEL, STATUS_TONE } from '../state/AppContext';
 
 const TIMELINE = [
@@ -19,13 +19,16 @@ export default function BookingDetails() {
   const { id } = useParams();
   const history = useHistory();
   const isNew = new URLSearchParams(useLocation().search).get('new') === '1';
-  const { bookings, submitPayment, cancelBooking, addReview, teacherFor, base } = useApp();
+  const {
+    bookings, submitPayment, cancelBooking, addReview, teacherFor, base, settings, transactions,
+  } = useApp();
 
   const [payOpen, setPayOpen] = useState(false);
   const [receipt, setReceipt] = useState('');
   const [reviewOpen, setReviewOpen] = useState(false);
   const [stars, setStars] = useState(5);
   const [reviewText, setReviewText] = useState('');
+  const [cancelOpen, setCancelOpen] = useState(false);
 
   const booking = bookings.find((b) => b.id === id);
   if (!booking) return <EmptyState title="الحجز غير موجود" body="" />;
@@ -33,6 +36,9 @@ export default function BookingDetails() {
   const teacher = teacherFor(booking.teacherId);
   const commission = booking.platformFee ?? 0;
   const currentStep = order(booking.status);
+  // What cancelling right now would cost, by the platform's own rule.
+  const paid = transactions.find((t) => t.bookingId === booking.id && t.status === 'held');
+  const ifCancelled = cancellationOutcome({ settings, booking, transaction: paid });
   const isDead = [BOOKING_STATUS.REJECTED, BOOKING_STATUS.CANCELLED].includes(booking.status);
 
   return (
@@ -146,6 +152,25 @@ export default function BookingDetails() {
           </Banner>
         )}
 
+        {booking.cancellation && (
+          <div className="dz-card" style={{ marginTop: 16 }}>
+            <div className="dz-h3" style={{ marginBottom: 8 }}>تفاصيل الإلغاء</div>
+            <div className="dz-kv"><span className="dz-kv__k">المبلغ المدفوع</span><span className="dz-kv__v">{money(booking.price)}</span></div>
+            {booking.cancellation.fee > 0 && (
+              <div className="dz-kv">
+                <span className="dz-kv__k">رسوم إلغاء متأخر ({percent(settings.cancellationFee)})</span>
+                <span className="dz-kv__v">- {money(booking.cancellation.fee)}</span>
+              </div>
+            )}
+            <div className="dz-kv dz-total"><span className="dz-kv__k">المبلغ المُسترجع</span><span className="dz-kv__v">{money(booking.cancellation.refund)}</span></div>
+            <div className="dz-faint" style={{ marginTop: 8 }}>
+              {booking.cancellation.late
+                ? 'أُلغي الحجز داخل نافذة الإلغاء المتأخر، وتُعوَّض رسوم الإلغاء وقت المدرس.'
+                : 'أُلغي الحجز قبل الموعد بوقت كافٍ، فاسترُجع كامل المبلغ.'}
+            </div>
+          </div>
+        )}
+
         {booking.status === BOOKING_STATUS.COMPLETED && (
           <div className="dz-card" style={{ marginTop: 16 }}>
             <div className="dz-h3" style={{ marginBottom: 8 }}>تقييم الحصة</div>
@@ -178,16 +203,55 @@ export default function BookingDetails() {
           </div>
         )}
         {[BOOKING_STATUS.PENDING_APPROVAL, BOOKING_STATUS.AWAITING_PAYMENT, BOOKING_STATUS.CONFIRMED].includes(booking.status) && (
-          <button type="button" className="dz-btn dz-btn--danger dz-btn--sm" style={{ width: '100%' }} onClick={() => cancelBooking(booking.id)}>
+          <button
+            type="button"
+            className="dz-btn dz-btn--danger dz-btn--sm"
+            style={{ width: '100%' }}
+            onClick={() => (paid ? setCancelOpen(true) : cancelBooking(booking.id))}
+          >
             إلغاء الحجز
           </button>
         )}
         {booking.status === BOOKING_STATUS.CONFIRMED && (
           <div className="dz-faint" style={{ textAlign: 'center' }}>
-            الإلغاء المجاني متاح حتى {FREE_CANCELLATION_HOURS} ساعة قبل الموعد
+            {ifCancelled.late
+              ? `الإلغاء الآن متأخر — تُخصم رسوم إلغاء ${percent(settings.cancellationFee)}`
+              : `الإلغاء المجاني متاح حتى ${settings.freeCancellationHours} ساعة قبل الموعد`}
           </div>
         )}
       </div>
+
+      <Sheet open={cancelOpen} onClose={() => setCancelOpen(false)} title="تأكيد الإلغاء">
+        <div className="dz-stack">
+          <div className="dz-card dz-card--soft">
+            <div className="dz-kv"><span className="dz-kv__k">المبلغ المدفوع</span><span className="dz-kv__v">{money(booking.price)}</span></div>
+            {ifCancelled.retained > 0 && (
+              <div className="dz-kv">
+                <span className="dz-kv__k">رسوم إلغاء متأخر ({percent(settings.cancellationFee)})</span>
+                <span className="dz-kv__v">- {money(ifCancelled.retained)}</span>
+              </div>
+            )}
+            <div className="dz-kv dz-total"><span className="dz-kv__k">يُسترجع لك</span><span className="dz-kv__v">{money(ifCancelled.refund)}</span></div>
+          </div>
+
+          <Banner tone={ifCancelled.late ? 'danger' : 'primary'}>
+            {ifCancelled.late
+              ? `بقي أقل من ${settings.freeCancellationHours} ساعة على الموعد، لذلك تُخصم رسوم الإلغاء وتذهب للمدرس ودرسي.`
+              : 'الإلغاء ضمن الوقت المسموح — يُسترجع كامل المبلغ.'}
+          </Banner>
+
+          <button
+            type="button"
+            className="dz-btn dz-btn--danger"
+            onClick={() => { cancelBooking(booking.id); setCancelOpen(false); }}
+          >
+            تأكيد الإلغاء
+          </button>
+          <button type="button" className="dz-btn dz-btn--ghost dz-btn--sm" style={{ width: '100%' }} onClick={() => setCancelOpen(false)}>
+            تراجع
+          </button>
+        </div>
+      </Sheet>
 
       <Sheet open={payOpen} onClose={() => setPayOpen(false)} title="إتمام الدفع">
         <Banner tone="accent">

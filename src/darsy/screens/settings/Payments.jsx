@@ -10,8 +10,15 @@ const ME = 't1';
 
 const PAID = [BOOKING_STATUS.CONFIRMED, BOOKING_STATUS.COMPLETED];
 
-const TX_LABEL = { held: 'محجوز حتى الحصة', released: 'أُضيف لرصيدك', refunded: 'مُسترجع للطالب' };
-const TX_TONE = { held: 'accent', released: 'success', refunded: 'danger' };
+const TX_LABEL = {
+  held: 'محجوز حتى الحصة',
+  released: 'أُضيف لرصيدك',
+  refunded: 'مُسترجع للطالب',
+  partially_refunded: 'إلغاء متأخر — تعويض لك',
+};
+const TX_TONE = {
+  held: 'accent', released: 'success', refunded: 'danger', partially_refunded: 'accent',
+};
 
 const PAYOUT_LABEL = { requested: 'طلب سحب قيد التنفيذ', paid: 'تم التحويل' };
 

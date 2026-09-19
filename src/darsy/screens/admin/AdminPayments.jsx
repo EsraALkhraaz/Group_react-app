@@ -5,14 +5,22 @@ import { subjectById } from '../../data/catalog';
 import { useApp, BOOKING_STATUS } from '../../state/AppContext';
 import { percent } from '../../lib/money';
 
-const TX_LABEL = { held: 'محجوز', released: 'مُفرج عنه', refunded: 'مُسترجع' };
-const TX_TONE = { held: 'accent', released: 'success', refunded: 'danger' };
+const TX_LABEL = {
+  held: 'محجوز',
+  released: 'مُفرج عنه',
+  refunded: 'مُسترجع بالكامل',
+  partially_refunded: 'إلغاء متأخر — رسوم محتجزة',
+};
+const TX_TONE = {
+  held: 'accent', released: 'success', refunded: 'danger', partially_refunded: 'accent',
+};
 
 const FILTERS = [
   { key: 'all', label: 'الكل' },
   { key: 'held', label: 'محجوز' },
   { key: 'released', label: 'مُفرج عنه' },
   { key: 'refunded', label: 'مُسترجع' },
+  { key: 'partially_refunded', label: 'إلغاء متأخر' },
 ];
 
 export default function AdminPayments() {
@@ -107,6 +115,7 @@ export default function AdminPayments() {
                     </span>
                     <span className="dz-muted" style={{ display: 'block', marginTop: 2 }}>
                       عمولة {money(t.commission)} · للمدرس {money(t.tutorEarning)}
+                      {t.refundedAmount > 0 && ` · مُسترجع ${money(t.refundedAmount)}`}
                     </span>
                     <span className="dz-row" style={{ gap: 6, marginTop: 6 }}>
                       <span className={`dz-chip dz-chip--sm dz-chip--${TX_TONE[t.status]}`}>{TX_LABEL[t.status]}</span>

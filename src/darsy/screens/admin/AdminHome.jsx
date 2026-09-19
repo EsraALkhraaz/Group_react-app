@@ -128,6 +128,7 @@ export default function AdminHome() {
             ))}
             <div className="dz-kv"><span className="dz-kv__k">عمولة الحصص الجماعية</span><span className="dz-kv__v">{percent(settings.groupCommission)}</span></div>
             <div className="dz-kv"><span className="dz-kv__k">رسوم الإلغاء المتأخر</span><span className="dz-kv__v">{percent(settings.cancellationFee)}</span></div>
+            <div className="dz-kv"><span className="dz-kv__k">نافذة الإلغاء المجاني</span><span className="dz-kv__v">{settings.freeCancellationHours} ساعة</span></div>
             <div className="dz-kv"><span className="dz-kv__k">الحد الأدنى للسحب</span><span className="dz-kv__v">{money(settings.minimumPayout)}</span></div>
             <div style={{ marginTop: 10 }}>
               <Banner tone="accent">تُقرأ هذه النِّسب من إعدادات المنصة — تغييرها لا يحتاج تعديل الكود.</Banner>

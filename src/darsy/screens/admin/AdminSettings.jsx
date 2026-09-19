@@ -17,6 +17,7 @@ const draftFrom = (settings) => ({
   })),
   groupCommission: toPercent(settings.groupCommission),
   cancellationFee: toPercent(settings.cancellationFee),
+  freeCancellationHours: String(settings.freeCancellationHours),
   paymentFee: toPercent(settings.paymentFee),
   minimumPayout: String(settings.minimumPayout),
 });
@@ -65,6 +66,7 @@ export default function AdminSettings() {
   const valid = draft.tiers.every((t) => validPercent(t.rate) && validCount(t.minSessions))
     && validPercent(draft.groupCommission)
     && validPercent(draft.cancellationFee)
+    && validCount(draft.freeCancellationHours)
     && validPercent(draft.paymentFee)
     && validCount(draft.minimumPayout);
 
@@ -75,6 +77,7 @@ export default function AdminSettings() {
         .sort((a, b) => a.minSessions - b.minSessions),
       groupCommission: toRate(draft.groupCommission),
       cancellationFee: toRate(draft.cancellationFee),
+      freeCancellationHours: Number(draft.freeCancellationHours),
       paymentFee: toRate(draft.paymentFee),
       minimumPayout: Number(draft.minimumPayout),
     });
@@ -159,6 +162,16 @@ export default function AdminSettings() {
                 value={draft.cancellationFee}
                 onChange={set('cancellationFee')}
               />
+              <Field label="نافذة الإلغاء المجاني (ساعة)" hint="الإلغاء قبل هذه المدة يُسترجع كاملًا، وبعدها تُخصم رسوم الإلغاء">
+                <input
+                  className="dz-input"
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  value={draft.freeCancellationHours}
+                  onChange={(e) => set('freeCancellationHours')(e.target.value)}
+                />
+              </Field>
               <PercentInput
                 label="رسوم بوابة الدفع %"
                 hint="صفر حاليًا — التحويل المصرفي بلا رسوم منصة"

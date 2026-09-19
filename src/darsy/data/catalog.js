@@ -55,11 +55,8 @@ export const DEFAULT_RATES = {
 // Guard rails the admin panel enforces on whatever a teacher enters.
 export const RATE_LIMITS = { min: 10, max: 200 };
 
-// Platform commission — configurable from the admin panel, never fixed in product code.
-export const COMMISSION_RATE = 0.15;
-
-// Cancellation window in hours — also an admin setting.
-export const FREE_CANCELLATION_HOURS = 24;
+// Commission rates and the cancellation window live in PlatformSettings
+// (state/AppContext), not here: they are edited from the admin dashboard.
 
 export const PLATFORM_BANK = {
   bankName: 'مصرف الجمهورية',

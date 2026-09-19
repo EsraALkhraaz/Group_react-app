@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { commissionRateFor, splitAmount } from '../lib/money';
+import { commissionRateFor, splitAmount, cancellationOutcome, TX } from '../lib/money';
 import { TEACHERS, teacherById } from '../data/teachers';
 
 const STORAGE_KEY = 'darsy.prototype.v1';
@@ -75,14 +75,15 @@ const seedState = () => ({
     ],
     groupCommission: 0.15,
     cancellationFee: 0.25,
+    freeCancellationHours: 24,
     paymentFee: 0,
     minimumPayout: 100,
   },
   transactions: [
     // b1 is paid and confirmed: Darsy holds the money until the session happens.
-    { id: 'tx1', bookingId: 'b1', teacherId: 't1', learnerName: 'يوسف', gross: 30, commission: 4.5, tutorEarning: 25.5, status: 'held', createdAt: iso(-3) },
+    { id: 'tx1', bookingId: 'b1', teacherId: 't1', learnerName: 'يوسف', gross: 30, commission: 4.5, tutorEarning: 25.5, status: TX.HELD, createdAt: iso(-3) },
     // b3 happened: the teacher's share was released into their balance.
-    { id: 'tx2', bookingId: 'b3', teacherId: 't3', learnerName: 'يوسف', gross: 50, commission: 7.5, tutorEarning: 42.5, status: 'released', createdAt: iso(-12), releasedAt: iso(-6) },
+    { id: 'tx2', bookingId: 'b3', teacherId: 't3', learnerName: 'يوسف', gross: 50, commission: 7.5, tutorEarning: 42.5, status: TX.RELEASED, createdAt: iso(-12), releasedAt: iso(-6) },
   ],
   payouts: [],
   prefs: { inApp: true, reminders: true, sms: false },
@@ -161,7 +162,13 @@ const seedState = () => ({
 const load = () => {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (raw) return { ...seedState(), ...JSON.parse(raw) };
+    if (raw) {
+      const seed = seedState();
+      const stored = JSON.parse(raw);
+      // Settings merge key by key, so a setting added after this browser last
+      // saved still has its default instead of coming back undefined.
+      return { ...seed, ...stored, settings: { ...seed.settings, ...(stored.settings || {}) } };
+    }
   } catch (e) {
     /* storage unavailable — fall back to seed */
   }
@@ -423,7 +430,7 @@ export function AppProvider({ children }) {
                 gross: booking.price,
                 commission: booking.platformFee,
                 tutorEarning: booking.tutorAmount,
-                status: 'held',
+                status: TX.HELD,
                 createdAt: new Date().toISOString(),
               },
               ...s.transactions,
@@ -436,17 +443,61 @@ export function AppProvider({ children }) {
         });
       },
 
-      // Cancelling after payment refunds the learner; a held entry becomes refunded.
+      // Cancelling in time refunds everything. Cancelling late keeps the platform's
+      // cancellation fee, and the teacher keeps their share of it.
       cancelBooking: (id) =>
-        setState((s) => ({
-          ...s,
-          bookings: s.bookings.map((b) => (b.id === id ? { ...b, status: BOOKING_STATUS.CANCELLED } : b)),
-          transactions: s.transactions.map((t) =>
-            t.bookingId === id && t.status === 'held'
-              ? { ...t, status: 'refunded', refundedAt: new Date().toISOString() }
-              : t,
-          ),
-        })),
+        setState((s) => {
+          const booking = s.bookings.find((b) => b.id === id);
+          const paid = s.transactions.find((t) => t.bookingId === id && t.status === TX.HELD);
+
+          // Nothing was paid yet, so there is nothing to refund.
+          if (!booking || !paid) {
+            return {
+              ...s,
+              bookings: s.bookings.map((b) => (b.id === id ? { ...b, status: BOOKING_STATUS.CANCELLED } : b)),
+            };
+          }
+
+          const outcome = cancellationOutcome({ settings: s.settings, booking, transaction: paid });
+          const at = new Date().toISOString();
+
+          return {
+            ...s,
+            bookings: s.bookings.map((b) =>
+              b.id === id
+                ? {
+                  ...b,
+                  status: BOOKING_STATUS.CANCELLED,
+                  cancellation: { late: outcome.late, fee: outcome.retained, refund: outcome.refund, at },
+                }
+                : b,
+            ),
+            transactions: s.transactions.map((t) =>
+              t.id === paid.id
+                ? {
+                  ...t,
+                  status: outcome.retained > 0 ? TX.PARTIAL : TX.REFUNDED,
+                  commission: outcome.commission,
+                  tutorEarning: outcome.tutorEarning,
+                  refundedAmount: outcome.refund,
+                  refundedAt: at,
+                }
+                : t,
+            ),
+            notifications: [
+              {
+                id: `n${Date.now()}`,
+                title: 'أُلغي الحجز',
+                body: outcome.late
+                  ? `إلغاء متأخر — يُسترجع ${outcome.refund} د.ل بعد خصم رسوم الإلغاء`
+                  : `يُسترجع كامل المبلغ ${outcome.refund} د.ل`,
+                tone: outcome.late ? 'accent' : 'primary',
+                unread: true,
+              },
+              ...s.notifications,
+            ],
+          };
+        }),
 
       // Session happened: the held amount is released into the teacher's balance.
       completeBooking: (id) =>
@@ -454,8 +505,8 @@ export function AppProvider({ children }) {
           ...s,
           bookings: s.bookings.map((b) => (b.id === id ? { ...b, status: BOOKING_STATUS.COMPLETED } : b)),
           transactions: s.transactions.map((t) =>
-            t.bookingId === id && t.status === 'held'
-              ? { ...t, status: 'released', releasedAt: new Date().toISOString() }
+            t.bookingId === id && t.status === TX.HELD
+              ? { ...t, status: TX.RELEASED, releasedAt: new Date().toISOString() }
               : t,
           ),
         })),
