@@ -11,7 +11,7 @@ const ROLE_LABEL = { student: 'طالب', parent: 'ولي أمر', teacher: 'م�
 
 export default function Account() {
   const history = useHistory();
-  const { base, role, profile, resetPrototype, teacherFor } = useApp();
+  const { base, role, profile, resetPrototype, teacherFor, signOut } = useApp();
 
   const isTeacher = role === 'teacher';
   const teacher = isTeacher ? teacherFor(ME) : null;
@@ -96,10 +96,15 @@ export default function Account() {
           <div className="dz-section-title"><span>الحساب</span></div>
           <div className="dz-stack dz-stack--sm">
             <Banner tone="accent">
-              نموذج أولي: «تبديل الحساب» يعيدك إلى المدخل الرئيسي لتجرّب واجهة أخرى.
+              نموذج أولي: تسجيل الخروج يعيدك إلى المدخل الرئيسي لتجرّب واجهة أخرى.
             </Banner>
-            <button type="button" className="dz-btn dz-btn--ghost dz-btn--sm" style={{ width: '100%' }} onClick={() => history.push('/')}>
-              تبديل الحساب
+            <button
+              type="button"
+              className="dz-btn dz-btn--ghost dz-btn--sm"
+              style={{ width: '100%' }}
+              onClick={() => { signOut(); history.push('/'); }}
+            >
+              تسجيل الخروج
             </button>
             <button type="button" className="dz-btn dz-btn--danger dz-btn--sm" style={{ width: '100%' }} onClick={resetPrototype}>
               إعادة ضبط البيانات التجريبية

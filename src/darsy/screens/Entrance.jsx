@@ -34,11 +34,13 @@ const DOORS = [
 
 export default function Entrance() {
   const history = useHistory();
-  const { setRole } = useApp();
+  const { setRole, session } = useApp();
 
   const enter = (role) => {
     setRole(role);
-    history.push(`${BASE_BY_ROLE[role]}/home`);
+    // Signed in already for this role? Go straight in, otherwise sign in first.
+    const signedIn = session && session.role === role;
+    history.push(signedIn ? `${BASE_BY_ROLE[role]}/home` : `/auth/${role}/login`);
   };
 
   return (

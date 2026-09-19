@@ -17,6 +17,11 @@ import Account from './screens/Account';
 import TeacherRequests from './screens/TeacherRequests';
 import TeacherSchedule from './screens/TeacherSchedule';
 import TeacherProfileEdit from './screens/TeacherProfileEdit';
+import Login from './screens/auth/Login';
+import Signup from './screens/auth/Signup';
+import VerifyPhone from './screens/auth/VerifyPhone';
+import ForgotPassword from './screens/auth/ForgotPassword';
+import ResetPassword from './screens/auth/ResetPassword';
 import './styles/theme.css';
 
 function ScrollToTop() {
@@ -31,10 +36,13 @@ function ScrollToTop() {
 // Entering an interface by its URL puts the app in that role, so a deep link
 // lands in the right shell instead of the one the last visit left behind.
 function RoleGate({ role, children }) {
-  const { role: current, setRole } = useApp();
+  const { role: current, setRole, session } = useApp();
   React.useEffect(() => {
     if (current !== role) setRole(role);
   }, [current, role, setRole]);
+
+  // Each interface is behind its own sign-in.
+  if (!session || session.role !== role) return <Redirect to={`/auth/${role}/login`} />;
   return children;
 }
 
@@ -90,6 +98,11 @@ export default function DarsyApp() {
           <ScrollToTop />
           <Switch>
             <Route exact path="/" component={Entrance} />
+            <Route exact path="/auth/:role/login" component={Login} />
+            <Route exact path="/auth/:role/signup" component={Signup} />
+            <Route exact path="/auth/:role/verify" component={VerifyPhone} />
+            <Route exact path="/auth/:role/forgot" component={ForgotPassword} />
+            <Route exact path="/auth/:role/reset" component={ResetPassword} />
             <Route path="/student" render={() => <LearnerRoutes base="/student" role="student" home={Home} />} />
             <Route path="/parent" render={() => <LearnerRoutes base="/parent" role="parent" home={ParentHome} />} />
             <Route path="/teacher" component={TeacherRoutes} />

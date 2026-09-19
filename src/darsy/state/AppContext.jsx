@@ -43,8 +43,18 @@ const iso = (daysFromNow) => {
   return d.toISOString().slice(0, 10);
 };
 
+// The prototype has no backend: a password is validated in the form and then
+// thrown away, never stored here or in localStorage. Accounts hold identity only.
+export const DEMO_ACCOUNTS = [
+  { role: 'student', name: 'أحمد الزوي', phone: '0910000001', verified: true },
+  { role: 'parent', name: 'سارة المبروك', phone: '0912345678', verified: true },
+  { role: 'teacher', name: 'أحمد علي المبروك', phone: '0911111111', verified: true },
+];
+
 const seedState = () => ({
   role: 'student',
+  session: null,
+  accounts: DEMO_ACCOUNTS,
   profile: { name: 'سارة المبروك', phone: '0912345678' },
   children: [
     { id: 'c1', name: 'يوسف', gradeId: 'g6' },
@@ -187,6 +197,47 @@ export function AppProvider({ children }) {
         })),
 
       setActiveChild: (name) => setState((s) => ({ ...s, activeChild: name })),
+
+      accountFor: (role, phone) =>
+        state.accounts.find((a) => a.role === role && a.phone === phone) || null,
+
+      signIn: ({ role, phone }) => {
+        const account = state.accounts.find((a) => a.role === role && a.phone === phone);
+        if (!account) return false;
+        setState((s) => ({
+          ...s,
+          role,
+          session: { role, name: account.name, phone: account.phone },
+          profile: { name: account.name, phone: account.phone },
+        }));
+        return true;
+      },
+
+      signUp: ({ role, name, phone, gradeId }) => {
+        const account = { role, name: name.trim(), phone, verified: false };
+        setState((s) => ({
+          ...s,
+          role,
+          accounts: [...s.accounts.filter((a) => !(a.role === role && a.phone === phone)), account],
+          session: { role, name: account.name, phone },
+          profile: { name: account.name, phone },
+          children: role === 'parent' ? [] : s.children,
+          studentGradeId: role === 'student' ? gradeId : s.studentGradeId,
+        }));
+      },
+
+      // Stands in for the code sent by SMS being accepted.
+      confirmPhone: () =>
+        setState((s) => ({
+          ...s,
+          accounts: s.accounts.map((a) =>
+            s.session && a.role === s.session.role && a.phone === s.session.phone
+              ? { ...a, verified: true }
+              : a,
+          ),
+        })),
+
+      signOut: () => setState((s) => ({ ...s, session: null })),
 
       removeChild: (id) =>
         setState((s) => ({ ...s, children: s.children.filter((c) => c.id !== id) })),
