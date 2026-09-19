@@ -25,7 +25,32 @@ const PAYOUT_LABEL = { requested: 'طلب سحب قيد التنفيذ', paid: '
 // A zero deduction reads better without a minus sign in front of it.
 const minus = (n) => (n > 0 ? `- ${money(n)}` : money(n));
 
-function LearnerPayments({ bookings, teacherFor, onOpen }) {
+function CreditCard({ credit }) {
+  return (
+    <section style={{ marginBottom: 18 }}>
+      <div className="dz-section-title"><span>رصيدي في درسي</span></div>
+      <div className="dz-card">
+        <div className="dz-row" style={{ marginBottom: 10 }}>
+          <IconWallet size={18} />
+          <span className="dz-h3">{money(credit.balance)}</span>
+        </div>
+        <div className="dz-muted" style={{ marginBottom: credit.entries.length ? 12 : 0 }}>
+          يُستخدم الرصيد مباشرةً في أي حجز قادم بدل التحويل المصرفي.
+        </div>
+        {credit.entries.map((e) => (
+          <div key={e.id} className="dz-kv">
+            <span className="dz-kv__k">{e.reason} · {formatDate(e.at.slice(0, 10))}</span>
+            <span className="dz-kv__v" style={{ color: e.amount < 0 ? 'var(--c-muted)' : 'var(--c-success)' }}>
+              {e.amount < 0 ? `- ${money(-e.amount)}` : `+ ${money(e.amount)}`}
+            </span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function LearnerPayments({ bookings, teacherFor, onOpen, credit }) {
   const paid = bookings.filter((b) => PAID.includes(b.status));
   const due = bookings.filter((b) => b.status === BOOKING_STATUS.AWAITING_PAYMENT);
   const reviewing = bookings.filter((b) => b.status === BOOKING_STATUS.PAYMENT_REVIEW);
@@ -47,6 +72,8 @@ function LearnerPayments({ bookings, teacherFor, onOpen }) {
           <div className="dz-stats__lbl">قيد المراجعة</div>
         </div>
       </div>
+
+      {(credit.balance > 0 || credit.entries.length > 0) && <CreditCard credit={credit} />}
 
       <section style={{ marginBottom: 18 }}>
         <div className="dz-section-title"><span>حساب التحويل</span></div>
@@ -244,7 +271,7 @@ export default function Payments() {
   const history = useHistory();
   const {
     base, role, bookings, teacherFor, payoutAccount, setPayoutAccount,
-    transactions, payouts, settings, requestPayout,
+    transactions, payouts, settings, requestPayout, creditOf,
   } = useApp();
 
   const [open, setOpen] = useState(false);
@@ -279,6 +306,7 @@ export default function Payments() {
           <LearnerPayments
             bookings={bookings}
             teacherFor={teacherFor}
+            credit={creditOf(role)}
             onOpen={(id) => history.push(`${base}/booking/${id}`)}
           />
         )}

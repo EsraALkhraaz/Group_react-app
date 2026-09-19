@@ -19,9 +19,14 @@ const num = (n) => Number(n).toFixed(2).replace(/\.?0+$/, '');
 
 export default function AdminHome() {
   const history = useHistory();
-  const { transactions, payouts, bookings, settings, teacherFor } = useApp();
+  const {
+    transactions, payouts, bookings, settings, teacherFor, credits,
+  } = useApp();
 
   const totals = platformTotals({ transactions, payouts });
+  // Refunds stay inside Darsy as learner credit, so the cash is still here but
+  // it is owed, not earned. It belongs on the board next to the teachers' dues.
+  const owedToLearners = Object.values(credits).reduce((total, c) => total + c.balance, 0);
   const awaitingReview = bookings.filter((b) => b.status === BOOKING_STATUS.PAYMENT_REVIEW);
   const openPayouts = payouts.filter((p) => p.status === 'requested');
   const recent = transactions.slice(0, 5);
@@ -46,6 +51,7 @@ export default function AdminHome() {
             <Kpi label="محجوز لحصص لم تُنفَّذ" value={num(totals.heldForTeachers)} />
             <Kpi label="مسحوب فعليًا" value={num(totals.withdrawn)} />
             <Kpi label="مبالغ مُسترجعة" value={num(totals.refunded)} />
+            <Kpi label="أرصدة لدى الطلاب (التزام)" value={num(owedToLearners)} />
           </div>
           <div className="dz-card" style={{ marginTop: 12 }}>
             <div className="dz-kv dz-total">
@@ -53,7 +59,8 @@ export default function AdminHome() {
               <span className="dz-kv__v">{money(totals.netRevenue)}</span>
             </div>
             <div className="dz-faint" style={{ marginTop: 8 }}>
-              صافي الإيراد = عمولات الحجوزات غير المُسترجعة. أموال المدرسين ليست إيرادًا للمنصة.
+              صافي الإيراد = عمولات الحجوزات غير المُسترجعة. أموال المدرسين وأرصدة الطلاب
+              ليست إيرادًا للمنصة — هي التزام مستحق عليها.
             </div>
           </div>
         </section>

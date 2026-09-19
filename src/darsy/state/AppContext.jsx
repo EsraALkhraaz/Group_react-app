@@ -86,6 +86,12 @@ const seedState = () => ({
     { id: 'tx2', bookingId: 'b3', teacherId: 't3', learnerName: 'يوسف', gross: 50, commission: 7.5, tutorEarning: 42.5, status: TX.RELEASED, createdAt: iso(-12), releasedAt: iso(-6) },
   ],
   payouts: [],
+  // Money Darsy owes back to a payer. A refund lands here instead of going out
+  // through a bank transfer that nobody can execute automatically yet.
+  credits: {
+    student: { balance: 0, entries: [] },
+    parent: { balance: 0, entries: [] },
+  },
   prefs: { inApp: true, reminders: true, sms: false },
   payoutAccount: { bankName: 'مصرف الوحدة', holder: 'أحمد علي المبروك', accountNumber: '0044-7781-2290' },
   // What a teacher edited about themselves — rates and profile fields both win
@@ -95,6 +101,7 @@ const seedState = () => ({
   bookings: [
     {
       id: 'b1',
+      payerRole: 'parent',
       teacherId: 't1',
       learnerName: 'يوسف',
       subjectId: 'math',
@@ -115,6 +122,7 @@ const seedState = () => ({
     },
     {
       id: 'b2',
+      payerRole: 'parent',
       teacherId: 't2',
       learnerName: 'ليان',
       subjectId: 'english',
@@ -134,6 +142,7 @@ const seedState = () => ({
     },
     {
       id: 'b3',
+      payerRole: 'parent',
       teacherId: 't3',
       learnerName: 'يوسف',
       subjectId: 'science',
@@ -191,12 +200,28 @@ const mergePricing = (teacher, override) => {
   return { online: apply('online'), f2f: apply('f2f') };
 };
 
+// Credit is money Darsy already holds and now owes back to the payer. It is
+// added and spent in one place so the balance and its statement never drift.
+const addCredit = (credits, payerRole, entry) => {
+  const key = payerRole || 'parent';
+  const wallet = credits[key] || { balance: 0, entries: [] };
+  return {
+    ...credits,
+    [key]: {
+      balance: Math.round((wallet.balance + entry.amount) * 100) / 100,
+      entries: [{ id: `cr${Date.now()}`, at: new Date().toISOString(), ...entry }, ...wallet.entries],
+    },
+  };
+};
+
 // The directory entry is the starting point; whatever the teacher edited wins.
 const mergeTeacher = (base, profile, rates) => ({
   ...base,
   ...(profile || {}),
   pricing: mergePricing(base, rates),
 });
+
+const s_credit = (state, role) => state.credits[role || state.role] || { balance: 0, entries: [] };
 
 const AppContext = createContext(null);
 
@@ -370,6 +395,7 @@ export function AppProvider({ children }) {
           bookings: [
             {
               id,
+              payerRole: s.role,
               status: BOOKING_STATUS.PENDING_APPROVAL,
               createdAt: new Date().toISOString().slice(0, 10),
               durationMins: 60,
@@ -484,13 +510,18 @@ export function AppProvider({ children }) {
                 }
                 : t,
             ),
+            credits: addCredit(s.credits, booking.payerRole, {
+              amount: outcome.refund,
+              reason: outcome.late ? 'إلغاء متأخر — بعد خصم الرسوم' : 'إلغاء حجز — استرجاع كامل',
+              bookingId: booking.id,
+            }),
             notifications: [
               {
                 id: `n${Date.now()}`,
                 title: 'أُلغي الحجز',
                 body: outcome.late
-                  ? `إلغاء متأخر — يُسترجع ${outcome.refund} د.ل بعد خصم رسوم الإلغاء`
-                  : `يُسترجع كامل المبلغ ${outcome.refund} د.ل`,
+                  ? `أُضيف ${outcome.refund} د.ل لرصيدك بعد خصم رسوم الإلغاء المتأخر`
+                  : `أُضيف كامل المبلغ ${outcome.refund} د.ل لرصيدك`,
                 tone: outcome.late ? 'accent' : 'primary',
                 unread: true,
               },
@@ -510,6 +541,131 @@ export function AppProvider({ children }) {
               : t,
           ),
         })),
+
+      // The teacher apologises for a booking that was already paid for. The
+      // learner never loses money to the teacher's own change of plan: the full
+      // amount goes back as credit, whatever the timing.
+      teacherApologize: (id, reason) =>
+        setState((s) => {
+          const booking = s.bookings.find((b) => b.id === id);
+          if (!booking) return s;
+
+          const paid = s.transactions.find((t) => t.bookingId === id && t.status === TX.HELD);
+          const at = new Date().toISOString();
+          const amount = paid ? paid.gross : 0;
+
+          return {
+            ...s,
+            bookings: s.bookings.map((b) =>
+              b.id === id
+                ? {
+                  ...b,
+                  status: BOOKING_STATUS.CANCELLED,
+                  cancellation: {
+                    byTeacher: true, late: false, fee: 0, refund: amount, credited: amount > 0, reason: reason || '', at,
+                  },
+                }
+                : b,
+            ),
+            transactions: paid
+              ? s.transactions.map((t) =>
+                t.id === paid.id
+                  ? {
+                    ...t,
+                    status: TX.REFUNDED,
+                    commission: 0,
+                    tutorEarning: 0,
+                    refundedAmount: t.gross,
+                    refundedAt: at,
+                    creditedToLearner: true,
+                  }
+                  : t,
+              )
+              : s.transactions,
+            credits: amount > 0
+              ? addCredit(s.credits, booking.payerRole, {
+                amount,
+                reason: 'اعتذار المدرس عن الحصة',
+                bookingId: id,
+              })
+              : s.credits,
+            notifications: [
+              {
+                id: `n${Date.now()}`,
+                title: 'اعتذر المدرس عن الحصة',
+                body: amount > 0
+                  ? `أُضيف ${amount} د.ل كاملة لرصيدك — استخدمه في أي حجز قادم`
+                  : reason || 'يمكنك اختيار موعد آخر أو مدرس آخر',
+                tone: 'danger',
+                unread: true,
+              },
+              ...s.notifications,
+            ],
+          };
+        }),
+
+      // Paying from credit needs no transfer and no receipt: Darsy already holds
+      // the money, so the booking is confirmed on the spot.
+      payFromCredit: (id) =>
+        setState((s) => {
+          const booking = s.bookings.find((b) => b.id === id);
+          if (!booking) return s;
+
+          const key = booking.payerRole || 'parent';
+          const wallet = s.credits[key] || { balance: 0, entries: [] };
+          if (wallet.balance < booking.price) return s;
+
+          const at = new Date().toISOString();
+
+          return {
+            ...s,
+            bookings: s.bookings.map((b) =>
+              b.id === id
+                ? {
+                  ...b,
+                  status: BOOKING_STATUS.CONFIRMED,
+                  paidWithCredit: true,
+                  meetingLink: `https://meet.example.com/darsy-${id.slice(-4)}`,
+                }
+                : b,
+            ),
+            credits: {
+              ...s.credits,
+              [key]: {
+                balance: Math.round((wallet.balance - booking.price) * 100) / 100,
+                entries: [
+                  {
+                    id: `cr${Date.now()}`, at, amount: -booking.price, reason: 'دفع حصة من الرصيد', bookingId: id,
+                  },
+                  ...wallet.entries,
+                ],
+              },
+            },
+            transactions: [
+              {
+                id: `tx${Date.now()}`,
+                bookingId: id,
+                teacherId: booking.teacherId,
+                learnerName: booking.learnerName,
+                gross: booking.price,
+                commission: booking.platformFee,
+                tutorEarning: booking.tutorAmount,
+                status: TX.HELD,
+                paidWithCredit: true,
+                createdAt: at,
+              },
+              ...s.transactions,
+            ],
+            notifications: [
+              {
+                id: `n${Date.now()}`, title: 'تم تأكيد حجزك', body: 'دُفعت الحصة من رصيدك', tone: 'success', unread: true,
+              },
+              ...s.notifications,
+            ],
+          };
+        }),
+
+      creditOf: (role) => s_credit(state, role),
 
       // A review can only be attached to a completed booking (business rule).
       addReview: (id, stars, text) =>

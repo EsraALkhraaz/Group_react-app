@@ -21,6 +21,7 @@ export default function BookingDetails() {
   const isNew = new URLSearchParams(useLocation().search).get('new') === '1';
   const {
     bookings, submitPayment, cancelBooking, addReview, teacherFor, base, settings, transactions,
+    creditOf, payFromCredit,
   } = useApp();
 
   const [payOpen, setPayOpen] = useState(false);
@@ -39,6 +40,8 @@ export default function BookingDetails() {
   // What cancelling right now would cost, by the platform's own rule.
   const paid = transactions.find((t) => t.bookingId === booking.id && t.status === 'held');
   const ifCancelled = cancellationOutcome({ settings, booking, transaction: paid });
+  const credit = creditOf(booking.payerRole);
+  const creditCovers = credit.balance >= booking.price;
   const isDead = [BOOKING_STATUS.REJECTED, BOOKING_STATUS.CANCELLED].includes(booking.status);
 
   return (
@@ -162,11 +165,14 @@ export default function BookingDetails() {
                 <span className="dz-kv__v">- {money(booking.cancellation.fee)}</span>
               </div>
             )}
-            <div className="dz-kv dz-total"><span className="dz-kv__k">المبلغ المُسترجع</span><span className="dz-kv__v">{money(booking.cancellation.refund)}</span></div>
+            <div className="dz-kv dz-total"><span className="dz-kv__k">أُضيف لرصيدك</span><span className="dz-kv__v">{money(booking.cancellation.refund)}</span></div>
             <div className="dz-faint" style={{ marginTop: 8 }}>
-              {booking.cancellation.late
-                ? 'أُلغي الحجز داخل نافذة الإلغاء المتأخر، وتُعوَّض رسوم الإلغاء وقت المدرس.'
-                : 'أُلغي الحجز قبل الموعد بوقت كافٍ، فاسترُجع كامل المبلغ.'}
+              {booking.cancellation.byTeacher
+                ? `اعتذر المدرس عن الحصة${booking.cancellation.reason ? ` — ${booking.cancellation.reason}` : ''}، وأُعيد كامل المبلغ إلى رصيدك دون أي خصم.`
+                : (booking.cancellation.late
+                  ? 'أُلغي الحجز داخل نافذة الإلغاء المتأخر، وتُعوَّض رسوم الإلغاء وقت المدرس.'
+                  : 'أُلغي الحجز قبل الموعد بوقت كافٍ، فعاد كامل المبلغ.')}
+              {' '}يُستخدم الرصيد مباشرةً في أي حجز قادم.
             </div>
           </div>
         )}
@@ -231,13 +237,13 @@ export default function BookingDetails() {
                 <span className="dz-kv__v">- {money(ifCancelled.retained)}</span>
               </div>
             )}
-            <div className="dz-kv dz-total"><span className="dz-kv__k">يُسترجع لك</span><span className="dz-kv__v">{money(ifCancelled.refund)}</span></div>
+            <div className="dz-kv dz-total"><span className="dz-kv__k">يُضاف لرصيدك</span><span className="dz-kv__v">{money(ifCancelled.refund)}</span></div>
           </div>
 
           <Banner tone={ifCancelled.late ? 'danger' : 'primary'}>
             {ifCancelled.late
-              ? `بقي أقل من ${settings.freeCancellationHours} ساعة على الموعد، لذلك تُخصم رسوم الإلغاء وتذهب للمدرس ودرسي.`
-              : 'الإلغاء ضمن الوقت المسموح — يُسترجع كامل المبلغ.'}
+              ? `بقي أقل من ${settings.freeCancellationHours} ساعة على الموعد، لذلك تُخصم رسوم الإلغاء وتذهب للمدرس ودرسي. الباقي يُضاف لرصيدك في درسي.`
+              : 'الإلغاء ضمن الوقت المسموح — يعود كامل المبلغ إلى رصيدك في درسي، وتستخدمه في أي حجز قادم.'}
           </Banner>
 
           <button
@@ -254,6 +260,29 @@ export default function BookingDetails() {
       </Sheet>
 
       <Sheet open={payOpen} onClose={() => setPayOpen(false)} title="إتمام الدفع">
+        {credit.balance > 0 && (
+          <div className="dz-card dz-card--soft" style={{ marginBottom: 14 }}>
+            <div className="dz-kv">
+              <span className="dz-kv__k">رصيدك في درسي</span>
+              <span className="dz-kv__v">{money(credit.balance)}</span>
+            </div>
+            {creditCovers ? (
+              <button
+                type="button"
+                className="dz-btn dz-btn--primary dz-btn--sm"
+                style={{ width: '100%', marginTop: 10 }}
+                onClick={() => { payFromCredit(booking.id); setPayOpen(false); }}
+              >
+                ادفع من رصيدك — {money(booking.price)}
+              </button>
+            ) : (
+              <div className="dz-faint" style={{ marginTop: 8 }}>
+                لا يغطي رصيدك قيمة هذه الحصة ({money(booking.price)}) — أكمل بالتحويل المصرفي.
+              </div>
+            )}
+          </div>
+        )}
+
         <Banner tone="accent">
           التحويل يتم لحساب منصة درسي، ويُحوَّل للمدرس بعد إتمام الحصة (نظام ضمان).
         </Banner>
