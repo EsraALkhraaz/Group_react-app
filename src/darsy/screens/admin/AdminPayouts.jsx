@@ -7,10 +7,13 @@ import { walletOf } from '../../lib/money';
 export default function AdminPayouts() {
   const {
     payouts, transactions, settings, payoutAccount, markPayoutPaid, teacherFor,
+    refundRequests, settleBankRefund,
   } = useApp();
 
   const open = payouts.filter((p) => p.status === 'requested');
   const paid = payouts.filter((p) => p.status === 'paid');
+  const refunds = refundRequests.filter((r) => r.status === 'requested');
+  const settledRefunds = refundRequests.filter((r) => r.status !== 'requested');
 
   // Teachers who have a balance but have not asked for it yet.
   const balances = [...new Set(transactions.map((t) => t.teacherId))]
@@ -61,6 +64,75 @@ export default function AdminPayouts() {
                   >
                     تأكيد التحويل
                   </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section style={{ marginBottom: 18 }}>
+          <div className="dz-section-title"><span>استرجاعات بنكية للطلاب</span></div>
+          {refunds.length === 0 ? (
+            <EmptyState
+              title="لا توجد طلبات استرجاع"
+              body="يطلبها الطالب عن المبالغ التي اعتذر عنها المدرس فقط."
+            />
+          ) : (
+            <div className="dz-stack dz-stack--sm">
+              {refunds.map((r) => (
+                <div key={r.id} className="dz-card">
+                  <div className="dz-row" style={{ marginBottom: 8 }}>
+                    <span className="dz-grow">
+                      <span style={{ fontWeight: 700, fontSize: 14, display: 'block' }}>
+                        {r.payerRole === 'parent' ? 'ولي أمر' : 'طالب'} · حجز {r.bookingId.slice(-6)}
+                      </span>
+                      <span className="dz-muted" style={{ display: 'block', marginTop: 2 }}>
+                        طُلب في {formatDate(r.requestedAt.slice(0, 10))}
+                      </span>
+                    </span>
+                    <span className="dz-price">{money(r.amount)}</span>
+                  </div>
+
+                  <div className="dz-kv"><span className="dz-kv__k">المصرف</span><span className="dz-kv__v">{r.account.bankName}</span></div>
+                  <div className="dz-kv"><span className="dz-kv__k">صاحب الحساب</span><span className="dz-kv__v">{r.account.holder}</span></div>
+                  <div className="dz-kv"><span className="dz-kv__k">رقم الحساب</span><span className="dz-kv__v" style={{ direction: 'ltr' }}>{r.account.accountNumber}</span></div>
+
+                  <div className="dz-row" style={{ gap: 8, marginTop: 10 }}>
+                    <button
+                      type="button"
+                      className="dz-btn dz-btn--success dz-btn--sm"
+                      style={{ flex: 1 }}
+                      onClick={() => settleBankRefund(r.id, true)}
+                    >
+                      تأكيد التحويل
+                    </button>
+                    <button
+                      type="button"
+                      className="dz-btn dz-btn--ghost dz-btn--sm"
+                      style={{ flex: 1 }}
+                      onClick={() => settleBankRefund(r.id, false)}
+                    >
+                      تعذّر — أعده للرصيد
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {settledRefunds.length > 0 && (
+            <div className="dz-card" style={{ marginTop: 10 }}>
+              {settledRefunds.map((r) => (
+                <div key={r.id} className="dz-listrow">
+                  <span className="dz-grow">
+                    <span style={{ fontSize: 13, fontWeight: 700, display: 'block' }}>حجز {r.bookingId.slice(-6)}</span>
+                    <span className="dz-muted" style={{ display: 'block', marginTop: 2 }}>
+                      {formatDate(r.settledAt.slice(0, 10))}
+                    </span>
+                  </span>
+                  <span className={`dz-chip dz-chip--sm dz-chip--${r.status === 'paid' ? 'success' : 'danger'}`}>
+                    {r.status === 'paid' ? 'حُوِّل' : 'أُعيد للرصيد'}
+                  </span>
+                  <span className="dz-price">{money(r.amount)}</span>
                 </div>
               ))}
             </div>

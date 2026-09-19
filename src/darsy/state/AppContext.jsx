@@ -97,6 +97,8 @@ const seedState = () => ({
     { id: 'tx2', bookingId: 'b3', teacherId: 't3', learnerName: 'يوسف', gross: 50, commission: 7.5, tutorEarning: 42.5, status: TX.RELEASED, createdAt: iso(-12), releasedAt: iso(-6) },
   ],
   payouts: [],
+  // A learner asking for apology credit back in cash instead.
+  refundRequests: [],
   // Money Darsy owes back to a payer. A refund lands here instead of going out
   // through a bank transfer that nobody can execute automatically yet.
   credits: {
@@ -670,6 +672,9 @@ export function AppProvider({ children }) {
                 amount,
                 reason: 'اعتذار المدرس عن الحصة',
                 bookingId: id,
+                // The learner paid and got nothing, through no fault of their
+                // own: this much they may ask back in cash, not only as credit.
+                refundable: true,
               })
               : s.credits,
             notifications: [
@@ -756,6 +761,94 @@ export function AppProvider({ children }) {
         }),
 
       creditOf: (role) => s_credit(state, role),
+
+      // The balance is debited as soon as the request is made, so the same
+      // money cannot be spent on a booking while the transfer is pending.
+      requestBankRefund: (payerRole, entryId, account) =>
+        setState((s) => {
+          const key = payerRole || 'parent';
+          const wallet = s.credits[key] || { balance: 0, entries: [] };
+          const entry = wallet.entries.find((e) => e.id === entryId);
+          if (!entry || !entry.refundable || entry.refundRequestedAt) return s;
+          if (wallet.balance < entry.amount) return s;
+
+          const at = new Date().toISOString();
+
+          return {
+            ...s,
+            credits: {
+              ...s.credits,
+              [key]: {
+                balance: Math.round((wallet.balance - entry.amount) * 100) / 100,
+                entries: [
+                  {
+                    id: `cr${Date.now()}`, at, amount: -entry.amount, reason: 'طلب استرجاع بنكي', bookingId: entry.bookingId,
+                  },
+                  ...wallet.entries.map((e) => (e.id === entryId ? { ...e, refundRequestedAt: at } : e)),
+                ],
+              },
+            },
+            refundRequests: [
+              {
+                id: `rr${Date.now()}`,
+                payerRole: key,
+                entryId,
+                bookingId: entry.bookingId,
+                amount: entry.amount,
+                account,
+                status: 'requested',
+                requestedAt: at,
+              },
+              ...s.refundRequests,
+            ],
+            notifications: [
+              {
+                id: `n${Date.now()}`,
+                title: 'أُرسل طلب الاسترجاع البنكي',
+                body: `${entry.amount} د.ل — تراجعه الإدارة ثم تُحوَّل لحسابك`,
+                tone: 'primary',
+                unread: true,
+              },
+              ...s.notifications,
+            ],
+          };
+        }),
+
+      settleBankRefund: (requestId, paid) =>
+        setState((s) => {
+          const request = s.refundRequests.find((r) => r.id === requestId);
+          if (!request || request.status !== 'requested') return s;
+
+          const at = new Date().toISOString();
+
+          return {
+            ...s,
+            refundRequests: s.refundRequests.map((r) =>
+              r.id === requestId
+                ? { ...r, status: paid ? 'paid' : 'declined', settledAt: at }
+                : r,
+            ),
+            // A declined request puts the money back where it was.
+            credits: paid ? s.credits : addCredit(s.credits, request.payerRole, {
+              amount: request.amount,
+              reason: 'تعذّر الاسترجاع البنكي — أُعيد للرصيد',
+              bookingId: request.bookingId,
+              refundable: true,
+            }),
+            notifications: [
+              {
+                id: `n${Date.now()}`,
+                title: paid ? 'حُوِّل مبلغ الاسترجاع' : 'تعذّر الاسترجاع البنكي',
+                body: paid
+                  ? `${request.amount} د.ل في طريقها لحسابك المصرفي`
+                  : `أُعيد ${request.amount} د.ل إلى رصيدك — راجع بيانات حسابك`,
+                tone: paid ? 'success' : 'danger',
+                unread: true,
+              },
+              ...s.notifications,
+            ],
+          };
+        }),
 
       apologiesOf: (teacherId) =>
         apologiesWithin(

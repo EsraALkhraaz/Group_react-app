@@ -25,7 +25,15 @@ const PAYOUT_LABEL = { requested: 'طلب سحب قيد التنفيذ', paid: '
 // A zero deduction reads better without a minus sign in front of it.
 const minus = (n) => (n > 0 ? `- ${money(n)}` : money(n));
 
-function CreditCard({ credit }) {
+function CreditCard({ credit, requests, onRefund }) {
+  const statusOf = (entry) => {
+    const request = requests.find((r) => r.entryId === entry.id);
+    if (!request) return null;
+    if (request.status === 'paid') return 'حُوِّل لحسابك';
+    if (request.status === 'declined') return 'تعذّر التحويل';
+    return 'طلب استرجاع قيد المراجعة';
+  };
+
   return (
     <section style={{ marginBottom: 18 }}>
       <div className="dz-section-title"><span>رصيدي في درسي</span></div>
@@ -38,15 +46,32 @@ function CreditCard({ credit }) {
           يُستخدم الرصيد مباشرةً في أي حجز قادم بدل التحويل المصرفي، ولا ينتهي بالتقادم.
         </div>
         <Banner tone="accent">
-          الرصيد لا يُحوَّل إلى حساب مصرفي — قيمته تبقى داخل درسي وتُستخدم في الحجوزات فقط.
+          الرصيد يُستخدم داخل درسي في الحجوزات. المبالغ التي اعتذر عنها المدرس وحدها
+          يمكنك طلب استرجاعها إلى حسابك المصرفي، لأنك دفعت ولم تحصل على الحصة بسبب ليس منك.
         </Banner>
         <div style={{ height: credit.entries.length ? 12 : 0 }} />
         {credit.entries.map((e) => (
-          <div key={e.id} className="dz-kv">
-            <span className="dz-kv__k">{e.reason} · {formatDate(e.at.slice(0, 10))}</span>
-            <span className="dz-kv__v" style={{ color: e.amount < 0 ? 'var(--c-muted)' : 'var(--c-success)' }}>
-              {e.amount < 0 ? `- ${money(-e.amount)}` : `+ ${money(e.amount)}`}
-            </span>
+          <div key={e.id}>
+            <div className="dz-kv">
+              <span className="dz-kv__k">{e.reason} · {formatDate(e.at.slice(0, 10))}</span>
+              <span className="dz-kv__v" style={{ color: e.amount < 0 ? 'var(--c-muted)' : 'var(--c-success)' }}>
+                {e.amount < 0 ? `- ${money(-e.amount)}` : `+ ${money(e.amount)}`}
+              </span>
+            </div>
+            {e.refundable && (
+              statusOf(e) ? (
+                <div className="dz-faint" style={{ paddingBottom: 8 }}>{statusOf(e)}</div>
+              ) : (
+                <button
+                  type="button"
+                  className="dz-btn dz-btn--ghost dz-btn--sm"
+                  style={{ marginBottom: 10 }}
+                  onClick={() => onRefund(e)}
+                >
+                  أطلب استرجاعه لحسابي المصرفي
+                </button>
+              )
+            )}
           </div>
         ))}
       </div>
@@ -54,7 +79,9 @@ function CreditCard({ credit }) {
   );
 }
 
-function LearnerPayments({ bookings, teacherFor, onOpen, credit }) {
+function LearnerPayments({
+  bookings, teacherFor, onOpen, credit, requests, onRefund,
+}) {
   const paid = bookings.filter((b) => PAID.includes(b.status));
   const due = bookings.filter((b) => b.status === BOOKING_STATUS.AWAITING_PAYMENT);
   const reviewing = bookings.filter((b) => b.status === BOOKING_STATUS.PAYMENT_REVIEW);
@@ -77,7 +104,9 @@ function LearnerPayments({ bookings, teacherFor, onOpen, credit }) {
         </div>
       </div>
 
-      {(credit.balance > 0 || credit.entries.length > 0) && <CreditCard credit={credit} />}
+      {(credit.balance > 0 || credit.entries.length > 0) && (
+        <CreditCard credit={credit} requests={requests} onRefund={onRefund} />
+      )}
 
       <section style={{ marginBottom: 18 }}>
         <div className="dz-section-title"><span>حساب التحويل</span></div>
@@ -276,12 +305,15 @@ export default function Payments() {
   const {
     base, role, bookings, teacherFor, payoutAccount, setPayoutAccount,
     transactions, payouts, settings, requestPayout, creditOf,
+    refundRequests, requestBankRefund,
   } = useApp();
 
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(payoutAccount);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [done, setDone] = useState(false);
+  const [refundEntry, setRefundEntry] = useState(null);
+  const [refundAccount, setRefundAccount] = useState({ bankName: '', holder: '', accountNumber: '' });
 
   const isTeacher = role === 'teacher';
   const wallet = walletOf({ transactions, payouts, teacherId: ME });
@@ -311,10 +343,61 @@ export default function Payments() {
             bookings={bookings}
             teacherFor={teacherFor}
             credit={creditOf(role)}
+            requests={refundRequests.filter((r) => r.payerRole === role)}
+            onRefund={(entry) => {
+              setRefundEntry(entry);
+              setRefundAccount({ bankName: '', holder: '', accountNumber: '' });
+            }}
             onOpen={(id) => history.push(`${base}/booking/${id}`)}
           />
         )}
       </div>
+
+      <Sheet open={Boolean(refundEntry)} onClose={() => setRefundEntry(null)} title="طلب استرجاع بنكي">
+        {refundEntry && (
+          <div className="dz-stack">
+            <div className="dz-card dz-card--soft">
+              <div className="dz-kv"><span className="dz-kv__k">السبب</span><span className="dz-kv__v">{refundEntry.reason}</span></div>
+              <div className="dz-kv dz-total"><span className="dz-kv__k">المبلغ</span><span className="dz-kv__v">{money(refundEntry.amount)}</span></div>
+            </div>
+
+            <Banner tone="accent">
+              يُخصم المبلغ من رصيدك فور الطلب، وتحوّله الإدارة لحسابك. الاستمرار بالرصيد
+              أسرع — التحويل المصرفي يحتاج وقتًا للمراجعة والتنفيذ.
+            </Banner>
+
+            <Field label="اسم المصرف">
+              <input className="dz-input" value={refundAccount.bankName} onChange={(e) => setRefundAccount({ ...refundAccount, bankName: e.target.value })} />
+            </Field>
+            <Field label="اسم صاحب الحساب">
+              <input className="dz-input" value={refundAccount.holder} onChange={(e) => setRefundAccount({ ...refundAccount, holder: e.target.value })} />
+            </Field>
+            <Field label="رقم الحساب">
+              <input
+                className="dz-input"
+                value={refundAccount.accountNumber}
+                onChange={(e) => setRefundAccount({ ...refundAccount, accountNumber: e.target.value })}
+                style={{ direction: 'ltr', textAlign: 'right' }}
+              />
+            </Field>
+
+            <button
+              type="button"
+              className="dz-btn dz-btn--primary"
+              disabled={!refundAccount.bankName.trim() || !refundAccount.holder.trim() || refundAccount.accountNumber.trim().length < 6}
+              onClick={() => {
+                requestBankRefund(role, refundEntry.id, refundAccount);
+                setRefundEntry(null);
+              }}
+            >
+              إرسال الطلب
+            </button>
+            <button type="button" className="dz-btn dz-btn--ghost dz-btn--sm" style={{ width: '100%' }} onClick={() => setRefundEntry(null)}>
+              أُبقيه رصيدًا
+            </button>
+          </div>
+        )}
+      </Sheet>
 
       <Sheet open={withdrawOpen} onClose={() => setWithdrawOpen(false)} title="طلب سحب الرصيد">
         <div className="dz-stack">
