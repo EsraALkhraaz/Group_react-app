@@ -26,7 +26,7 @@ export default function TeacherSchedule() {
   const mine = bookings.filter((b) => b.teacherId === ME);
   const list = tab === 'upcoming'
     ? mine.filter((b) => UPCOMING.includes(b.status))
-    : mine.filter((b) => [BOOKING_STATUS.COMPLETED, BOOKING_STATUS.CANCELLED, BOOKING_STATUS.REJECTED].includes(b.status));
+    : mine.filter((b) => [BOOKING_STATUS.COMPLETED, BOOKING_STATUS.CANCELLED, BOOKING_STATUS.REJECTED, BOOKING_STATUS.EXPIRED].includes(b.status));
 
   const grouped = list.reduce((acc, b) => {
     (acc[b.date] = acc[b.date] || []).push(b);

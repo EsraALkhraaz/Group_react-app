@@ -18,6 +18,7 @@ const draftFrom = (settings) => ({
   groupCommission: toPercent(settings.groupCommission),
   cancellationFee: toPercent(settings.cancellationFee),
   freeCancellationHours: String(settings.freeCancellationHours),
+  requestExpiryHours: String(settings.requestExpiryHours),
   paymentFee: toPercent(settings.paymentFee),
   minimumPayout: String(settings.minimumPayout),
 });
@@ -67,6 +68,7 @@ export default function AdminSettings() {
     && validPercent(draft.groupCommission)
     && validPercent(draft.cancellationFee)
     && validCount(draft.freeCancellationHours)
+    && validCount(draft.requestExpiryHours)
     && validPercent(draft.paymentFee)
     && validCount(draft.minimumPayout);
 
@@ -78,6 +80,7 @@ export default function AdminSettings() {
       groupCommission: toRate(draft.groupCommission),
       cancellationFee: toRate(draft.cancellationFee),
       freeCancellationHours: Number(draft.freeCancellationHours),
+      requestExpiryHours: Number(draft.requestExpiryHours),
       paymentFee: toRate(draft.paymentFee),
       minimumPayout: Number(draft.minimumPayout),
     });
@@ -162,6 +165,16 @@ export default function AdminSettings() {
                 value={draft.cancellationFee}
                 onChange={set('cancellationFee')}
               />
+              <Field label="مهلة رد المدرس على الطلب (ساعة)" hint="ينتهي الطلب تلقائيًا بعدها دون أي التزام مالي">
+                <input
+                  className="dz-input"
+                  type="number"
+                  inputMode="numeric"
+                  min="1"
+                  value={draft.requestExpiryHours}
+                  onChange={(e) => set('requestExpiryHours')(e.target.value)}
+                />
+              </Field>
               <Field label="نافذة الإلغاء المجاني (ساعة)" hint="الإلغاء قبل هذه المدة يُسترجع كاملًا، وبعدها تُخصم رسوم الإلغاء">
                 <input
                   className="dz-input"

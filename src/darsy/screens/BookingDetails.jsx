@@ -4,6 +4,7 @@ import { TopBar, Avatar, Banner, Sheet, Field, money, formatDate, formatTime, Em
 import { IconVideo, IconPin, IconCheck, IconUpload, IconClock, IconStar } from '../components/Icons';
 import { subjectById, PLATFORM_BANK } from '../data/catalog';
 import { percent, cancellationOutcome } from '../lib/money';
+import { timeLeftLabel } from '../lib/requests';
 import { useApp, BOOKING_STATUS, STATUS_LABEL, STATUS_TONE } from '../state/AppContext';
 
 const TIMELINE = [
@@ -42,7 +43,7 @@ export default function BookingDetails() {
   const ifCancelled = cancellationOutcome({ settings, booking, transaction: paid });
   const credit = creditOf(booking.payerRole);
   const creditCovers = credit.balance >= booking.price;
-  const isDead = [BOOKING_STATUS.REJECTED, BOOKING_STATUS.CANCELLED].includes(booking.status);
+  const isDead = [BOOKING_STATUS.REJECTED, BOOKING_STATUS.CANCELLED, BOOKING_STATUS.EXPIRED].includes(booking.status);
 
   return (
     <div className="dz-screen">
@@ -147,6 +148,19 @@ export default function BookingDetails() {
               {teacher.areas.join('، ')} — يتواصل معك المدرس على رقم هاتفك لتحديد العنوان الدقيق.
             </div>
           </div>
+        )}
+
+        {booking.status === BOOKING_STATUS.PENDING_APPROVAL && (
+          <Banner tone="accent" icon={<IconClock size={18} />}>
+            بانتظار رد المدرس — {timeLeftLabel(booking, settings)}. إن لم يرد خلال
+            {' '}{settings.requestExpiryHours} ساعة ينتهي الطلب تلقائيًا دون أي التزام عليك.
+          </Banner>
+        )}
+
+        {booking.status === BOOKING_STATUS.EXPIRED && (
+          <Banner tone="danger">
+            انتهت مدة الطلب دون رد من المدرس، ولم يُخصم منك أي مبلغ. اختر موعدًا آخر أو مدرسًا آخر.
+          </Banner>
         )}
 
         {booking.status === BOOKING_STATUS.PAYMENT_REVIEW && (

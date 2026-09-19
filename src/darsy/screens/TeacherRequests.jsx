@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { TopBar, BottomNav, Sheet, Field, EmptyState, money, formatDate, formatTime } from '../components/common';
-import { IconCheck, IconClose, IconVideo, IconPin } from '../components/Icons';
+import { IconCheck, IconClose, IconVideo, IconPin, IconClock } from '../components/Icons';
 import { subjectById } from '../data/catalog';
 import { useApp, BOOKING_STATUS } from '../state/AppContext';
+import { timeLeftLabel, hoursLeftToAnswer } from '../lib/requests';
 
 const ME = 't1';
 
 export default function TeacherRequests() {
-  const { bookings, approveBooking, rejectBooking } = useApp();
+  const { bookings, approveBooking, rejectBooking, settings } = useApp();
   const [rejectId, setRejectId] = useState(null);
   const [reason, setReason] = useState('');
 
@@ -21,7 +22,10 @@ export default function TeacherRequests() {
 
       <div className="dz-body">
         {requests.length === 0 ? (
-          <EmptyState title="لا توجد طلبات جديدة" body="ستظهر هنا طلبات الحجز فور وصولها، ولن تُخصم أي مبالغ قبل موافقتك." />
+          <EmptyState
+            title="لا توجد طلبات جديدة"
+            body={`ستظهر هنا طلبات الحجز فور وصولها. لديك ${settings.requestExpiryHours} ساعة للرد على كل طلب قبل أن ينتهي تلقائيًا.`}
+          />
         ) : (
           <div className="dz-stack">
             {requests.map((b) => (
@@ -48,6 +52,9 @@ export default function TeacherRequests() {
                   </span>
                   <span className="dz-chip dz-chip--sm dz-chip--accent">
                     {b.sessionType === 'group' ? 'جماعية' : 'فردية'}
+                  </span>
+                  <span className={`dz-chip dz-chip--sm${hoursLeftToAnswer(b, settings) < 6 ? ' dz-chip--danger' : ''}`}>
+                    <IconClock size={11} /> {timeLeftLabel(b, settings)}
                   </span>
                 </div>
 

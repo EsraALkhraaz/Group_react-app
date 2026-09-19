@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { commissionRateFor, splitAmount, cancellationOutcome, TX } from '../lib/money';
+import { isExpired } from '../lib/requests';
 import { TEACHERS, teacherById } from '../data/teachers';
 
 const STORAGE_KEY = 'darsy.prototype.v1';
@@ -17,6 +18,7 @@ export const BOOKING_STATUS = {
   CONFIRMED: 'confirmed',
   COMPLETED: 'completed',
   CANCELLED: 'cancelled',
+  EXPIRED: 'expired',
 };
 
 export const STATUS_LABEL = {
@@ -27,6 +29,7 @@ export const STATUS_LABEL = {
   confirmed: 'مؤكد',
   completed: 'مكتملة',
   cancelled: 'ملغاة',
+  expired: 'انتهت مدة الطلب',
 };
 
 export const STATUS_TONE = {
@@ -37,7 +40,12 @@ export const STATUS_TONE = {
   confirmed: 'success',
   completed: 'primary',
   cancelled: 'danger',
+  expired: 'danger',
 };
+
+// A timestamp a few hours back, so the seeded pending request still has time
+// left on it rather than expiring the moment the app opens.
+const hoursAgo = (hours) => new Date(Date.now() - hours * 3600000).toISOString();
 
 const iso = (daysFromNow) => {
   const d = new Date();
@@ -76,6 +84,7 @@ const seedState = () => ({
     groupCommission: 0.15,
     cancellationFee: 0.25,
     freeCancellationHours: 24,
+    requestExpiryHours: 24,
     paymentFee: 0,
     minimumPayout: 100,
   },
@@ -137,7 +146,7 @@ const seedState = () => ({
       platformFee: 3,
       tutorAmount: 17,
       status: BOOKING_STATUS.PENDING_APPROVAL,
-      createdAt: iso(-1),
+      createdAt: hoursAgo(5),
       note: 'تركيز على المحادثة من فضلك',
     },
     {
@@ -227,6 +236,43 @@ const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
   const [state, setState] = useState(load);
+
+  // A request nobody answered expires on its own. With no server to run this,
+  // the app sweeps on open and once a minute while it stays open.
+  useEffect(() => {
+    const sweep = () => setState((s) => {
+      const stale = s.bookings.filter(
+        (b) => b.status === BOOKING_STATUS.PENDING_APPROVAL && isExpired(b, s.settings),
+      );
+      if (stale.length === 0) return s;
+
+      const ids = stale.map((b) => b.id);
+      return {
+        ...s,
+        bookings: s.bookings.map((b) =>
+          ids.includes(b.id)
+            ? { ...b, status: BOOKING_STATUS.EXPIRED, expiredAt: new Date().toISOString() }
+            : b,
+        ),
+        notifications: [
+          ...stale.map((b, i) => ({
+            id: `n${Date.now() + i}`,
+            title: 'انتهت مدة طلب الحجز',
+            body: `لم يرد المدرس خلال ${s.settings.requestExpiryHours} ساعة — يمكنك اختيار موعد آخر أو مدرس آخر`,
+            tone: 'danger',
+            unread: true,
+          })),
+          ...s.notifications,
+        ],
+      };
+    });
+
+    sweep();
+    const timer = window.setInterval(sweep, 60000);
+    return () => window.clearInterval(timer);
+    // Shortening the window in the admin settings takes effect at once, rather
+    // than waiting for the next tick.
+  }, [state.settings.requestExpiryHours]);
 
   useEffect(() => {
     try {
@@ -397,7 +443,7 @@ export function AppProvider({ children }) {
               id,
               payerRole: s.role,
               status: BOOKING_STATUS.PENDING_APPROVAL,
-              createdAt: new Date().toISOString().slice(0, 10),
+              createdAt: new Date().toISOString(),
               durationMins: 60,
               ...draft,
               commissionRate: rate,
