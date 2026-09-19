@@ -2,7 +2,7 @@ import React from 'react';
 import { useHistory } from 'react-router-dom';
 import {
   IconBack, IconStar, IconVerified, IconHome, IconCalendar, IconCap, IconUser, IconUsers,
-  IconInbox, IconChart, IconWallet, IconPayout, IconSliders,
+  IconInbox, IconChart, IconWallet, IconPayout, IconSliders, IconGrid,
 } from './Icons';
 import { useApp } from '../state/AppContext';
 
@@ -118,6 +118,7 @@ const NAV_BY_ROLE = {
     { key: 'payments', label: 'المدفوعات', path: '/payments', Icon: IconWallet },
     { key: 'payouts', label: 'السحوبات', path: '/payouts', Icon: IconPayout },
     { key: 'teachers', label: 'المدرسون', path: '/teachers', Icon: IconCap },
+    { key: 'reference', label: 'البيانات', path: '/reference', Icon: IconGrid },
     { key: 'settings', label: 'الإعدادات', path: '/settings', Icon: IconSliders },
   ],
 };

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { TopBar, BottomNav, Sheet, Field, EmptyState } from '../components/common';
 import { IconClose, IconSearch, IconForward } from '../components/Icons';
-import { GRADES, gradeById } from '../data/catalog';
+import { GRADES, gradeById, active } from '../data/catalog';
 import { useApp, BOOKING_STATUS } from '../state/AppContext';
 
 export default function Children() {
@@ -98,7 +98,7 @@ export default function Children() {
           </Field>
           <Field label="الصف الدراسي">
             <select className="dz-select" value={gradeId} onChange={(e) => setGradeId(e.target.value)}>
-              {GRADES.map((g) => (
+              {active(GRADES).map((g) => (
                 <option key={g.id} value={g.id}>{g.name} — {g.stage}</option>
               ))}
             </select>

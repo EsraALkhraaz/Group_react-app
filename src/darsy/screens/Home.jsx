@@ -2,7 +2,7 @@ import React from 'react';
 import { useHistory } from 'react-router-dom';
 import { BottomNav, Avatar, formatDate, formatTime, money } from '../components/common';
 import { IconSearch, IconBell, IconForward, IconVideo, IconPin } from '../components/Icons';
-import { SUBJECTS, subjectById } from '../data/catalog';
+import { SUBJECTS, subjectById, active } from '../data/catalog';
 import { useApp, BOOKING_STATUS, STATUS_LABEL, STATUS_TONE } from '../state/AppContext';
 import mark from '../assets/darsy-mark.png';
 
@@ -95,7 +95,7 @@ export default function Home() {
         <section style={{ marginBottom: 20 }}>
           <div className="dz-section-title"><span>المواد الأكثر طلبًا</span></div>
           <div className="dz-chiprow">
-            {SUBJECTS.slice(0, 6).map((s) => (
+            {active(SUBJECTS).slice(0, 6).map((s) => (
               <button
                 key={s.id}
                 type="button"

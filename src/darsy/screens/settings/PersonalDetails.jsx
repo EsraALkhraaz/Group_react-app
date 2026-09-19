@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { TopBar, Field, Banner } from '../../components/common';
 import { IconCheck } from '../../components/Icons';
-import { GRADES } from '../../data/catalog';
+import { GRADES, active } from '../../data/catalog';
 import { normalizePhone, isValidPhone } from '../../lib/validation';
 import { useApp } from '../../state/AppContext';
 
@@ -65,7 +65,7 @@ export default function PersonalDetails() {
           {role === 'student' && (
             <Field label="صفي الدراسي" hint="يُستخدم لترشيح المدرسين المناسبين لك">
               <select className="dz-select" value={gradeId} onChange={(e) => setGradeId(e.target.value)}>
-                {GRADES.map((g) => (
+                {active(GRADES).map((g) => (
                   <option key={g.id} value={g.id}>{g.name} — {g.stage}</option>
                 ))}
               </select>

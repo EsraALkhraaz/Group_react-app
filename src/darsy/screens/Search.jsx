@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { BottomNav, TopBar, Field } from '../components/common';
-import { SUBJECTS, GRADES, LANGUAGES, CITIES } from '../data/catalog';
+import { SUBJECTS, GRADES, LANGUAGES, CITIES, active } from '../data/catalog';
 import { useApp } from '../state/AppContext';
 
 export default function Search() {
@@ -35,7 +35,7 @@ export default function Search() {
           <Field label="المادة">
             <select className="dz-select" value={subject} onChange={(e) => setSubject(e.target.value)}>
               <option value="">كل المواد</option>
-              {SUBJECTS.map((s) => (
+              {active(SUBJECTS).map((s) => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
             </select>
@@ -44,7 +44,7 @@ export default function Search() {
           <Field label="الصف الدراسي">
             <select className="dz-select" value={grade} onChange={(e) => setGrade(e.target.value)}>
               <option value="">كل الصفوف</option>
-              {GRADES.map((g) => (
+              {active(GRADES).map((g) => (
                 <option key={g.id} value={g.id}>{g.name} — {g.stage}</option>
               ))}
             </select>
@@ -53,7 +53,7 @@ export default function Search() {
           <Field label="لغة الشرح">
             <select className="dz-select" value={language} onChange={(e) => setLanguage(e.target.value)}>
               <option value="">أي لغة</option>
-              {LANGUAGES.map((l) => (
+              {active(LANGUAGES).map((l) => (
                 <option key={l.id} value={l.id}>{l.name}</option>
               ))}
             </select>
@@ -103,7 +103,7 @@ export default function Search() {
             <Field label="المدينة" hint="تظهر للحصص الحضورية فقط — المدرس يحدد مناطق التدريس، والعنوان الدقيق يُتبادل بعد تأكيد الحجز">
               <select className="dz-select" value={city} onChange={(e) => setCity(e.target.value)}>
                 <option value="">كل المدن</option>
-                {CITIES.map((c) => (
+                {active(CITIES).map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>

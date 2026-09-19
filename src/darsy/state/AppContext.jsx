@@ -2,6 +2,9 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from '
 import { commissionRateFor, splitAmount, cancellationOutcome, TX } from '../lib/money';
 import { isExpired } from '../lib/requests';
 import { TEACHERS, teacherById } from '../data/teachers';
+import {
+  SUBJECTS, GRADES, LANGUAGES, CITIES, applyRefData,
+} from '../data/catalog';
 
 const STORAGE_KEY = 'darsy.prototype.v1';
 
@@ -113,6 +116,10 @@ const seedState = () => ({
   teacherProfiles: {},
   // A teacher stopped from receiving new bookings until the admin lifts it.
   teacherStatus: {},
+  // The lists the admin owns. Seeded from the catalog, then edited from the panel.
+  refData: {
+    subjects: SUBJECTS, grades: GRADES, languages: LANGUAGES, cities: CITIES,
+  },
   // Identity review. A teacher is not listed publicly until Darsy approves it.
   teacherVerification: {
     t6: { status: 'pending', document: 'national-id.jpg', submittedAt: hoursAgo(20) },
@@ -265,6 +272,10 @@ const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
   const [state, setState] = useState(load);
+
+  // Push the admin's lists into the catalog before anything renders, so a screen
+  // that imports SUBJECTS directly still sees what the admin saved.
+  applyRefData(state.refData);
 
   // A request nobody answered expires on its own. With no server to run this,
   // the app sweeps on open and once a minute while it stays open.
@@ -425,6 +436,11 @@ export function AppProvider({ children }) {
         })),
 
       updateSettings: (patch) => setState((s) => ({ ...s, settings: { ...s.settings, ...patch } })),
+
+      // Reference data is never deleted — an old booking still has to be able to
+      // name its subject. Retiring an item hides it from pickers instead.
+      updateRefData: (kind, list) =>
+        setState((s) => ({ ...s, refData: { ...s.refData, [kind]: list } })),
 
       completedSessionsOf: (teacherId) => {
         const listed = teacherById(teacherId);

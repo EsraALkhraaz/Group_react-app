@@ -1,8 +1,11 @@
-// Reference data — in production this is managed from the admin panel, not hardcoded.
+// Reference data. The admin panel owns these lists: `applyRefData` replaces them
+// at runtime, and because they are exported as live bindings every screen that
+// imported them sees the new values on its next render. Lookups keep working for
+// an item the admin later disabled, so an old booking never loses its subject.
 
 // Subject colors sit in the brand's family: teal and gold lead, the rest
 // are mid-saturation neighbours so a grid of cards still reads as one system.
-export const SUBJECTS = [
+export let SUBJECTS = [
   { id: 'math', name: 'الرياضيات', color: '#14717A' },
   { id: 'english', name: 'اللغة الإنجليزية', color: '#D7A24B' },
   { id: 'arabic', name: 'اللغة العربية', color: '#7C6BA8' },
@@ -13,7 +16,7 @@ export const SUBJECTS = [
   { id: 'computer', name: 'الحاسوب والبرمجة', color: '#5B7DB1' },
 ];
 
-export const GRADES = [
+export let GRADES = [
   { id: 'kg', name: 'رياض الأطفال', stage: 'تمهيدي' },
   { id: 'g1', name: 'الصف الأول', stage: 'ابتدائي' },
   { id: 'g2', name: 'الصف الثاني', stage: 'ابتدائي' },
@@ -30,13 +33,13 @@ export const GRADES = [
   { id: 'uni', name: 'المستوى الجامعي', stage: 'جامعي' },
 ];
 
-export const LANGUAGES = [
+export let LANGUAGES = [
   { id: 'ar', name: 'العربية' },
   { id: 'en', name: 'الإنجليزية' },
   { id: 'fr', name: 'الفرنسية' },
 ];
 
-export const CITIES = [
+export let CITIES = [
   { id: 'tripoli', name: 'طرابلس' },
   { id: 'benghazi', name: 'بنغازي' },
   { id: 'misrata', name: 'مصراتة' },
@@ -63,6 +66,18 @@ export const PLATFORM_BANK = {
   accountName: 'شركة درسي للخدمات التعليمية',
   accountNumber: '0021-4457-8890-1122',
 };
+
+// Swapping in whatever the admin saved. Missing lists keep their current value.
+export function applyRefData(next) {
+  if (!next) return;
+  if (next.subjects) SUBJECTS = next.subjects;
+  if (next.grades) GRADES = next.grades;
+  if (next.languages) LANGUAGES = next.languages;
+  if (next.cities) CITIES = next.cities;
+}
+
+// What a picker should offer: a disabled item stays findable but unofferable.
+export const active = (list) => list.filter((item) => !item.disabled);
 
 export const subjectById = (id) => SUBJECTS.find((s) => s.id === id);
 export const gradeById = (id) => GRADES.find((g) => g.id === id);

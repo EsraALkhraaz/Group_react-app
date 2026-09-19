@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { TopBar, Field, Banner, EmptyState } from '../components/common';
 import { IconClose, IconCheck } from '../components/Icons';
-import { SUBJECTS, GRADES, LANGUAGES, CITIES } from '../data/catalog';
+import { SUBJECTS, GRADES, LANGUAGES, CITIES, active } from '../data/catalog';
 import { useApp } from '../state/AppContext';
 
 // The prototype signs the teacher in as Ahmed.
@@ -140,24 +140,24 @@ export default function TeacherProfileEdit() {
 
           <div>
             <div className="dz-label" style={{ marginBottom: 8 }}>المواد التي تدرّسها</div>
-            <Toggles options={SUBJECTS} selected={subjects} onToggle={toggle(subjects, setSubjects)} />
+            <Toggles options={active(SUBJECTS)} selected={subjects} onToggle={toggle(subjects, setSubjects)} />
           </div>
 
           <div>
             <div className="dz-label" style={{ marginBottom: 8 }}>الصفوف الدراسية</div>
-            <Toggles options={GRADES} selected={grades} onToggle={toggle(grades, setGrades)} />
+            <Toggles options={active(GRADES)} selected={grades} onToggle={toggle(grades, setGrades)} />
           </div>
 
           <div>
             <div className="dz-label" style={{ marginBottom: 8 }}>لغات الشرح</div>
-            <Toggles options={LANGUAGES} selected={languages} onToggle={toggle(languages, setLanguages)} />
+            <Toggles options={active(LANGUAGES)} selected={languages} onToggle={toggle(languages, setLanguages)} />
           </div>
 
           {teacher.pricing.f2f && (
             <>
               <Field label="المدينة">
                 <select className="dz-select" value={city} onChange={(e) => setCity(e.target.value)}>
-                  {CITIES.map((c) => (
+                  {active(CITIES).map((c) => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
                 </select>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useHistory, useParams, Redirect } from 'react-router-dom';
 import { Field, Banner } from '../../components/common';
 import { AuthShell, PasswordField, ROLE_LABEL } from './AuthShell';
-import { GRADES } from '../../data/catalog';
+import { GRADES, active } from '../../data/catalog';
 import { normalizePhone, isValidPhone, passwordIssue } from '../../lib/validation';
 import { useApp } from '../../state/AppContext';
 
@@ -97,7 +97,7 @@ export default function Signup() {
         {role === 'student' && (
           <Field label="صفك الدراسي">
             <select className="dz-select" value={gradeId} onChange={(e) => setGradeId(e.target.value)}>
-              {GRADES.map((g) => (
+              {active(GRADES).map((g) => (
                 <option key={g.id} value={g.id}>{g.name} — {g.stage}</option>
               ))}
             </select>
