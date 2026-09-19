@@ -115,6 +115,13 @@ export default function TeacherHome() {
 
   const next = [...upcoming].sort((a, b) => (a.date < b.date ? -1 : 1))[0];
 
+  const DAY_NAMES = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+  const availability = teacher.availability || {};
+  const weeklyHours = Object.values(availability).reduce((sum, list) => sum + list.length, 0);
+  const openDays = Object.keys(availability)
+    .filter((d) => availability[d].length > 0)
+    .map((d) => DAY_NAMES[Number(d)]);
+
   return (
     <div className="dz-screen">
       <header className="dz-topbar">
@@ -192,6 +199,37 @@ export default function TeacherHome() {
             </div>
           </section>
         )}
+
+        <section style={{ marginBottom: 20 }}>
+          <div className="dz-section-title">
+            <span>أوقات توفري</span>
+            <button
+              type="button"
+              className="dz-btn dz-btn--ghost dz-btn--sm"
+              onClick={() => history.push(`${base}/availability`)}
+            >
+              تعديل الأوقات
+            </button>
+          </div>
+          <div className="dz-card">
+            {weeklyHours === 0 ? (
+              <Banner tone="danger">
+                لم تحدد أي وقت متاح — لن يستطيع أي طالب حجز حصة معك.
+              </Banner>
+            ) : (
+              <>
+                <div className="dz-kv">
+                  <span className="dz-kv__k">ساعات متاحة أسبوعيًا</span>
+                  <span className="dz-kv__v">{weeklyHours} ساعة</span>
+                </div>
+                <div className="dz-kv">
+                  <span className="dz-kv__k">أيام العمل</span>
+                  <span className="dz-kv__v">{openDays.join('، ')}</span>
+                </div>
+              </>
+            )}
+          </div>
+        </section>
 
         <section style={{ marginBottom: 20 }}>
           <div className="dz-section-title">

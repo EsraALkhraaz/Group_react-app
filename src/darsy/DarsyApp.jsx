@@ -17,6 +17,7 @@ import Account from './screens/Account';
 import TeacherRequests from './screens/TeacherRequests';
 import TeacherSchedule from './screens/TeacherSchedule';
 import TeacherProfileEdit from './screens/TeacherProfileEdit';
+import TeacherAvailability from './screens/TeacherAvailability';
 import Login from './screens/auth/Login';
 import Signup from './screens/auth/Signup';
 import VerifyPhone from './screens/auth/VerifyPhone';
@@ -96,6 +97,7 @@ function TeacherRoutes() {
         <Route exact path="/teacher/account/payments" component={Payments} />
         <Route exact path="/teacher/account/security" component={Security} />
         <Route exact path="/teacher/edit" component={TeacherProfileEdit} />
+        <Route exact path="/teacher/availability" component={TeacherAvailability} />
         <Route exact path="/teacher/notifications" component={Notifications} />
         <Route exact path="/teacher/preview" render={() => <TeacherProfile teacherId="t1" />} />
         <Redirect to="/teacher/home" />
