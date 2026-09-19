@@ -25,6 +25,10 @@ import ResetPassword from './screens/auth/ResetPassword';
 import PersonalDetails from './screens/settings/PersonalDetails';
 import Payments from './screens/settings/Payments';
 import Security from './screens/settings/Security';
+import AdminHome from './screens/admin/AdminHome';
+import AdminPayments from './screens/admin/AdminPayments';
+import AdminPayouts from './screens/admin/AdminPayouts';
+import AdminSettings from './screens/admin/AdminSettings';
 import './styles/theme.css';
 
 function ScrollToTop() {
@@ -99,6 +103,21 @@ function TeacherRoutes() {
   );
 }
 
+// The back office: the money the platform holds, and the rates it holds it at.
+function AdminRoutes() {
+  return (
+    <RoleGate role="admin">
+      <Switch>
+        <Route exact path="/admin/home" component={AdminHome} />
+        <Route exact path="/admin/payments" component={AdminPayments} />
+        <Route exact path="/admin/payouts" component={AdminPayouts} />
+        <Route exact path="/admin/settings" component={AdminSettings} />
+        <Redirect to="/admin/home" />
+      </Switch>
+    </RoleGate>
+  );
+}
+
 export default function DarsyApp() {
   return (
     <AppProvider>
@@ -115,6 +134,7 @@ export default function DarsyApp() {
             <Route path="/student" render={() => <LearnerRoutes base="/student" role="student" home={Home} />} />
             <Route path="/parent" render={() => <LearnerRoutes base="/parent" role="parent" home={ParentHome} />} />
             <Route path="/teacher" component={TeacherRoutes} />
+            <Route path="/admin" component={AdminRoutes} />
             <Redirect to="/" />
           </Switch>
         </div>

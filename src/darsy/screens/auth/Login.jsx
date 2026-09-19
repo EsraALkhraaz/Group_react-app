@@ -46,14 +46,17 @@ export default function Login() {
           <button type="button" className="dz-btn dz-btn--primary" onClick={submit}>
             دخول
           </button>
-          <button
-            type="button"
-            className="dz-btn dz-btn--ghost dz-btn--sm"
-            style={{ width: '100%' }}
-            onClick={() => history.push(`/auth/${role}/signup`)}
-          >
-            ليس لديك حساب؟ أنشئ حسابًا
-          </button>
+          {/* Admin accounts are issued, not signed up for. */}
+          {role !== 'admin' && (
+            <button
+              type="button"
+              className="dz-btn dz-btn--ghost dz-btn--sm"
+              style={{ width: '100%' }}
+              onClick={() => history.push(`/auth/${role}/signup`)}
+            >
+              ليس لديك حساب؟ أنشئ حسابًا
+            </button>
+          )}
         </>
       }
     >

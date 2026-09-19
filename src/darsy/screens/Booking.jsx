@@ -2,7 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { useHistory, useParams } from 'react-router-dom';
 import { TopBar, Avatar, Banner, Field, money, formatDate, formatTime, EmptyState } from '../components/common';
 import { IconVideo, IconPin, IconPerson, IconUsers, IconCheck, IconClock } from '../components/Icons';
-import { subjectById, gradeById, COMMISSION_RATE } from '../data/catalog';
+import { subjectById, gradeById } from '../data/catalog';
+import { commissionRateFor, splitAmount, percent } from '../lib/money';
 import { monthMatrix, toISODate, slotsForDate, hasAnySlot } from '../lib/availability';
 import { useApp } from '../state/AppContext';
 
@@ -13,7 +14,10 @@ const MONTHS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'ماي�
 export default function Booking() {
   const { id } = useParams();
   const history = useHistory();
-  const { bookings, createBooking, role, children, profile, teacherFor, base, activeChild } = useApp();
+  const {
+    bookings, createBooking, role, children, profile, teacherFor, base, activeChild,
+    settings, completedSessionsOf,
+  } = useApp();
   const teacher = teacherFor(id);
 
   const [step, setStep] = useState(0);
@@ -81,7 +85,12 @@ export default function Booking() {
     else setStep(step - 1);
   };
 
-  const commission = price ? Math.round(price * COMMISSION_RATE) : 0;
+  const quotedRate = commissionRateFor({
+    settings,
+    completedSessions: completedSessionsOf(teacher.id),
+    sessionType,
+  });
+  const split = price ? splitAmount(price, quotedRate) : null;
 
   return (
     <div className="dz-screen">
@@ -309,7 +318,8 @@ export default function Booking() {
                 <div className="dz-kv"><span className="dz-kv__k">المدة</span><span className="dz-kv__v">60 دقيقة</span></div>
                 <div className="dz-kv dz-total"><span className="dz-kv__k">الإجمالي</span><span className="dz-kv__v">{money(price)}</span></div>
                 <div className="dz-faint" style={{ marginTop: 4 }}>
-                  يشمل عمولة المنصة ({commission} د.ل). الدفع بعد موافقة المدرس على الطلب.
+                  يشمل عمولة المنصة {percent(quotedRate)} ({split.commission} د.ل)، ويصل المدرس {split.tutorEarning} د.ل بعد الحصة.
+                  الدفع بعد موافقة المدرس على الطلب.
                 </div>
 
                 <div style={{ marginTop: 12 }}>

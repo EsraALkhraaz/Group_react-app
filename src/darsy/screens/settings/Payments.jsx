@@ -1,13 +1,22 @@
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { TopBar, Field, Banner, Sheet, EmptyState, money, formatDate } from '../../components/common';
-import { IconWallet, IconForward, IconUpload } from '../../components/Icons';
-import { subjectById, PLATFORM_BANK, COMMISSION_RATE } from '../../data/catalog';
+import { IconWallet, IconForward, IconUpload, IconPayout } from '../../components/Icons';
+import { subjectById, PLATFORM_BANK } from '../../data/catalog';
 import { useApp, BOOKING_STATUS, STATUS_LABEL, STATUS_TONE } from '../../state/AppContext';
+import { walletOf, commissionRateFor, percent } from '../../lib/money';
 
 const ME = 't1';
 
 const PAID = [BOOKING_STATUS.CONFIRMED, BOOKING_STATUS.COMPLETED];
+
+const TX_LABEL = { held: 'محجوز حتى الحصة', released: 'أُضيف لرصيدك', refunded: 'مُسترجع للطالب' };
+const TX_TONE = { held: 'accent', released: 'success', refunded: 'danger' };
+
+const PAYOUT_LABEL = { requested: 'طلب سحب قيد التنفيذ', paid: 'تم التحويل' };
+
+// A zero deduction reads better without a minus sign in front of it.
+const minus = (n) => (n > 0 ? `- ${money(n)}` : money(n));
 
 function LearnerPayments({ bookings, teacherFor, onOpen }) {
   const paid = bookings.filter((b) => PAID.includes(b.status));
@@ -83,21 +92,83 @@ function LearnerPayments({ bookings, teacherFor, onOpen }) {
   );
 }
 
-function TeacherPayouts({ bookings, payoutAccount, onEdit }) {
-  const mine = bookings.filter((b) => b.teacherId === ME);
-  const earned = mine.filter((b) => [BOOKING_STATUS.CONFIRMED, BOOKING_STATUS.COMPLETED].includes(b.status));
-  const gross = earned.reduce((s, b) => s + b.price, 0);
-  const commission = Math.round(gross * COMMISSION_RATE);
+// The teacher's side of the ledger: what Darsy collected for them, what it
+// still holds, what was released, and what already went out.
+function TeacherWallet({ onEdit, onWithdraw }) {
+  const {
+    transactions, payouts, payoutAccount, settings, completedSessionsOf,
+  } = useApp();
+
+  const wallet = walletOf({ transactions, payouts, teacherId: ME });
+  const mine = transactions.filter((t) => t.teacherId === ME);
+  const myPayouts = payouts.filter((p) => p.teacherId === ME);
+
+  const rate = commissionRateFor({
+    settings,
+    completedSessions: completedSessionsOf(ME),
+    sessionType: 'individual',
+  });
+
+  const hasAccount = Boolean(payoutAccount.accountNumber);
+  const belowMinimum = wallet.available < settings.minimumPayout;
+  const canWithdraw = hasAccount && !belowMinimum;
 
   return (
     <>
+      <section style={{ marginBottom: 18 }}>
+        <div className="dz-section-title"><span>محفظتي</span></div>
+        <div className="dz-card">
+          <div className="dz-row" style={{ marginBottom: 10 }}>
+            <IconWallet size={18} />
+            <span className="dz-h3">الرصيد</span>
+          </div>
+          <div className="dz-kv"><span className="dz-kv__k">إجمالي الحجوزات المدفوعة</span><span className="dz-kv__v">{money(wallet.gross)}</span></div>
+          <div className="dz-kv"><span className="dz-kv__k">عمولة درسي</span><span className="dz-kv__v">{minus(wallet.commission)}</span></div>
+          <div className="dz-kv"><span className="dz-kv__k">أرباح مُفرج عنها</span><span className="dz-kv__v">{money(wallet.earned)}</span></div>
+          <div className="dz-kv"><span className="dz-kv__k">قيد الانتظار (حصص لم تُنفَّذ)</span><span className="dz-kv__v">{money(wallet.pending)}</span></div>
+          <div className="dz-kv"><span className="dz-kv__k">المسحوب</span><span className="dz-kv__v">{minus(wallet.withdrawn)}</span></div>
+          {wallet.requested > 0 && (
+            <div className="dz-kv"><span className="dz-kv__k">طلب سحب قيد التنفيذ</span><span className="dz-kv__v">{minus(wallet.requested)}</span></div>
+          )}
+          <div className="dz-kv dz-total"><span className="dz-kv__k">الرصيد المتاح للسحب</span><span className="dz-kv__v">{money(wallet.available)}</span></div>
+
+          <div style={{ marginTop: 12 }}>
+            <button
+              type="button"
+              className="dz-btn dz-btn--primary"
+              style={{ width: '100%' }}
+              disabled={!canWithdraw}
+              onClick={onWithdraw}
+            >
+              <IconPayout size={16} /> طلب سحب الرصيد
+            </button>
+            {!hasAccount && (
+              <div style={{ marginTop: 10 }}>
+                <Banner tone="danger">أضف حساب استلام المستحقات أولاً.</Banner>
+              </div>
+            )}
+            {hasAccount && belowMinimum && (
+              <div className="dz-faint" style={{ marginTop: 8, textAlign: 'center' }}>
+                الحد الأدنى للسحب {money(settings.minimumPayout)} — رصيدك الآن {money(wallet.available)}.
+              </div>
+            )}
+          </div>
+
+          <div style={{ marginTop: 12 }}>
+            <Banner tone="primary">
+              عمولتك الحالية {percent(rate)} بعد {completedSessionsOf(ME)} حصة مكتملة.
+            </Banner>
+          </div>
+        </div>
+      </section>
+
       <section style={{ marginBottom: 18 }}>
         <div className="dz-section-title">
           <span>حساب استلام المستحقات</span>
           <button type="button" className="dz-btn dz-btn--ghost dz-btn--sm" onClick={onEdit}>تعديل</button>
         </div>
         <div className="dz-card">
-          {payoutAccount.accountNumber ? (
+          {hasAccount ? (
             <>
               <div className="dz-kv"><span className="dz-kv__k">المصرف</span><span className="dz-kv__v">{payoutAccount.bankName}</span></div>
               <div className="dz-kv"><span className="dz-kv__k">اسم صاحب الحساب</span><span className="dz-kv__v">{payoutAccount.holder}</span></div>
@@ -109,32 +180,49 @@ function TeacherPayouts({ bookings, payoutAccount, onEdit }) {
         </div>
       </section>
 
-      <section style={{ marginBottom: 18 }}>
-        <div className="dz-section-title"><span>ملخص المستحقات</span></div>
-        <div className="dz-card">
-          <div className="dz-kv"><span className="dz-kv__k">إجمالي الحجوزات</span><span className="dz-kv__v">{money(gross)}</span></div>
-          <div className="dz-kv"><span className="dz-kv__k">عمولة المنصة ({Math.round(COMMISSION_RATE * 100)}%)</span><span className="dz-kv__v">- {money(commission)}</span></div>
-          <div className="dz-kv dz-total"><span className="dz-kv__k">صافي المستحق</span><span className="dz-kv__v">{money(gross - commission)}</span></div>
-        </div>
-      </section>
+      {myPayouts.length > 0 && (
+        <section style={{ marginBottom: 18 }}>
+          <div className="dz-section-title"><span>طلبات السحب</span></div>
+          <div className="dz-card">
+            {myPayouts.map((p) => (
+              <div key={p.id} className="dz-listrow">
+                <span className="dz-grow">
+                  <span style={{ fontSize: 13, fontWeight: 700, display: 'block' }}>{money(p.amount)}</span>
+                  <span className="dz-muted" style={{ display: 'block', marginTop: 2 }}>
+                    {formatDate(p.requestedAt.slice(0, 10))}
+                  </span>
+                </span>
+                <span className={`dz-chip dz-chip--sm dz-chip--${p.status === 'paid' ? 'success' : 'accent'}`}>
+                  {PAYOUT_LABEL[p.status]}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section>
-        <div className="dz-section-title"><span>الحصص المحتسبة</span></div>
-        {earned.length === 0 ? (
-          <EmptyState title="لا توجد مستحقات بعد" body="تُحتسب الحصة بعد تأكيد حجزها." />
+        <div className="dz-section-title"><span>كشف الحركات</span></div>
+        {mine.length === 0 ? (
+          <EmptyState title="لا توجد حركات بعد" body="تُسجَّل الحركة عند تأكيد دفع الطالب." />
         ) : (
           <div className="dz-card">
-            {earned.map((b) => (
-              <div key={b.id} className="dz-listrow">
+            {mine.map((t) => (
+              <div key={t.id} className="dz-listrow">
                 <span className="dz-grow">
                   <span style={{ fontSize: 13, fontWeight: 700, display: 'block' }}>
-                    {b.learnerName} — {subjectById(b.subjectId)?.name}
+                    {t.learnerName} — {money(t.gross)}
                   </span>
-                  <span className="dz-muted" style={{ display: 'block', marginTop: 2 }}>{formatDate(b.date)}</span>
+                  <span className="dz-muted" style={{ display: 'block', marginTop: 2 }}>
+                    عمولة درسي {money(t.commission)} · {formatDate(t.createdAt.slice(0, 10))}
+                  </span>
+                  <span className="dz-row" style={{ gap: 6, marginTop: 6 }}>
+                    <span className={`dz-chip dz-chip--sm dz-chip--${TX_TONE[t.status]}`}>{TX_LABEL[t.status]}</span>
+                  </span>
                 </span>
                 <span className="dz-price">
-                  {money(b.price - Math.round(b.price * COMMISSION_RATE))}
-                  <small>بعد العمولة</small>
+                  {money(t.tutorEarning)}
+                  <small>نصيبك</small>
                 </span>
               </div>
             ))}
@@ -147,26 +235,38 @@ function TeacherPayouts({ bookings, payoutAccount, onEdit }) {
 
 export default function Payments() {
   const history = useHistory();
-  const { base, role, bookings, teacherFor, payoutAccount, setPayoutAccount } = useApp();
+  const {
+    base, role, bookings, teacherFor, payoutAccount, setPayoutAccount,
+    transactions, payouts, settings, requestPayout,
+  } = useApp();
+
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(payoutAccount);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [done, setDone] = useState(false);
 
   const isTeacher = role === 'teacher';
+  const wallet = walletOf({ transactions, payouts, teacherId: ME });
 
   return (
     <div className="dz-screen">
       <TopBar
         back
-        title={isTeacher ? 'المستحقات والفواتير' : 'المدفوعات والفواتير'}
+        title={isTeacher ? 'محفظتي والمستحقات' : 'المدفوعات والفواتير'}
         onBack={() => history.push(`${base}/account`)}
       />
 
       <div className="dz-body">
+        {done && (
+          <div style={{ marginBottom: 14 }}>
+            <Banner tone="success">أُرسل طلب السحب — تراجعه إدارة درسي ثم تُحوَّل لحسابك.</Banner>
+          </div>
+        )}
+
         {isTeacher ? (
-          <TeacherPayouts
-            bookings={bookings}
-            payoutAccount={payoutAccount}
+          <TeacherWallet
             onEdit={() => { setDraft(payoutAccount); setOpen(true); }}
+            onWithdraw={() => { setDone(false); setWithdrawOpen(true); }}
           />
         ) : (
           <LearnerPayments
@@ -176,6 +276,31 @@ export default function Payments() {
           />
         )}
       </div>
+
+      <Sheet open={withdrawOpen} onClose={() => setWithdrawOpen(false)} title="طلب سحب الرصيد">
+        <div className="dz-stack">
+          <div className="dz-card">
+            <div className="dz-kv"><span className="dz-kv__k">المبلغ المطلوب</span><span className="dz-kv__v">{money(wallet.available)}</span></div>
+            <div className="dz-kv"><span className="dz-kv__k">الحد الأدنى</span><span className="dz-kv__v">{money(settings.minimumPayout)}</span></div>
+            <div className="dz-kv"><span className="dz-kv__k">يُحوَّل إلى</span><span className="dz-kv__v">{payoutAccount.bankName}</span></div>
+            <div className="dz-kv"><span className="dz-kv__k">رقم الحساب</span><span className="dz-kv__v" style={{ direction: 'ltr' }}>{payoutAccount.accountNumber}</span></div>
+          </div>
+          <Banner tone="accent">
+            يُخصم المبلغ من رصيدك فور إرسال الطلب، ويُسجَّل كمسحوب بعد تحويل الإدارة له.
+          </Banner>
+          <button
+            type="button"
+            className="dz-btn dz-btn--primary"
+            onClick={() => {
+              requestPayout(ME, wallet.available);
+              setWithdrawOpen(false);
+              setDone(true);
+            }}
+          >
+            تأكيد طلب السحب
+          </button>
+        </div>
+      </Sheet>
 
       <Sheet open={open} onClose={() => setOpen(false)} title="حساب استلام المستحقات">
         <div className="dz-stack">

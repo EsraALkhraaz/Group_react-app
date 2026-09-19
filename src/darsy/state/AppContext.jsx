@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { COMMISSION_RATE } from '../data/catalog';
+import { commissionRateFor, splitAmount } from '../lib/money';
 import { TEACHERS, teacherById } from '../data/teachers';
 
 const STORAGE_KEY = 'darsy.prototype.v1';
 
 // Each role is its own interface with its own entrance and URL space.
-export const BASE_BY_ROLE = { student: '/student', parent: '/parent', teacher: '/teacher' };
+export const BASE_BY_ROLE = {
+  student: '/student', parent: '/parent', teacher: '/teacher', admin: '/admin',
+};
 
 export const BOOKING_STATUS = {
   PENDING_APPROVAL: 'pending_approval',
@@ -49,6 +51,7 @@ export const DEMO_ACCOUNTS = [
   { role: 'student', name: 'أحمد الزوي', phone: '0910000001', verified: true },
   { role: 'parent', name: 'سارة المبروك', phone: '0912345678', verified: true },
   { role: 'teacher', name: 'أحمد علي المبروك', phone: '0911111111', verified: true },
+  { role: 'admin', name: 'إدارة درسي', phone: '0919999999', verified: true },
 ];
 
 const seedState = () => ({
@@ -63,6 +66,25 @@ const seedState = () => ({
   favorites: ['t2'],
   activeChild: null,
   studentGradeId: 'g6',
+  // Every rate the money code uses — changed from the admin interface, never in code.
+  settings: {
+    commissionTiers: [
+      { minSessions: 0, rate: 0.2, label: 'مدرس جديد' },
+      { minSessions: 10, rate: 0.17, label: 'بعد 10 حصص' },
+      { minSessions: 30, rate: 0.15, label: 'مدرس نشط' },
+    ],
+    groupCommission: 0.15,
+    cancellationFee: 0.25,
+    paymentFee: 0,
+    minimumPayout: 100,
+  },
+  transactions: [
+    // b1 is paid and confirmed: Darsy holds the money until the session happens.
+    { id: 'tx1', bookingId: 'b1', teacherId: 't1', learnerName: 'يوسف', gross: 30, commission: 4.5, tutorEarning: 25.5, status: 'held', createdAt: iso(-3) },
+    // b3 happened: the teacher's share was released into their balance.
+    { id: 'tx2', bookingId: 'b3', teacherId: 't3', learnerName: 'يوسف', gross: 50, commission: 7.5, tutorEarning: 42.5, status: 'released', createdAt: iso(-12), releasedAt: iso(-6) },
+  ],
+  payouts: [],
   prefs: { inApp: true, reminders: true, sms: false },
   payoutAccount: { bankName: 'مصرف الوحدة', holder: 'أحمد علي المبروك', accountNumber: '0044-7781-2290' },
   // What a teacher edited about themselves — rates and profile fields both win
@@ -82,6 +104,9 @@ const seedState = () => ({
       time: '17:00',
       durationMins: 60,
       price: 30,
+      commissionRate: 0.15,
+      platformFee: 4.5,
+      tutorAmount: 25.5,
       status: BOOKING_STATUS.CONFIRMED,
       meetingLink: 'https://meet.example.com/darsy-ys-4412',
       createdAt: iso(-3),
@@ -99,6 +124,9 @@ const seedState = () => ({
       time: '16:00',
       durationMins: 60,
       price: 20,
+      commissionRate: 0.15,
+      platformFee: 3,
+      tutorAmount: 17,
       status: BOOKING_STATUS.PENDING_APPROVAL,
       createdAt: iso(-1),
       note: 'تركيز على المحادثة من فضلك',
@@ -115,6 +143,9 @@ const seedState = () => ({
       time: '18:00',
       durationMins: 60,
       price: 50,
+      commissionRate: 0.15,
+      platformFee: 7.5,
+      tutorAmount: 42.5,
       status: BOOKING_STATUS.COMPLETED,
       createdAt: iso(-12),
       note: '',
@@ -263,6 +294,39 @@ export function AppProvider({ children }) {
 
       setPayoutAccount: (account) => setState((s) => ({ ...s, payoutAccount: account })),
 
+      requestPayout: (teacherId, amount) =>
+        setState((s) => ({
+          ...s,
+          payouts: [
+            {
+              id: `po${Date.now()}`,
+              teacherId,
+              amount,
+              status: 'requested',
+              requestedAt: new Date().toISOString(),
+            },
+            ...s.payouts,
+          ],
+        })),
+
+      markPayoutPaid: (payoutId) =>
+        setState((s) => ({
+          ...s,
+          payouts: s.payouts.map((p) =>
+            p.id === payoutId ? { ...p, status: 'paid', paidAt: new Date().toISOString() } : p,
+          ),
+        })),
+
+      updateSettings: (patch) => setState((s) => ({ ...s, settings: { ...s.settings, ...patch } })),
+
+      completedSessionsOf: (teacherId) => {
+        const listed = teacherById(teacherId);
+        const onPlatform = state.bookings.filter(
+          (b) => b.teacherId === teacherId && b.status === BOOKING_STATUS.COMPLETED,
+        ).length;
+        return (listed ? listed.sessionsCount : 0) + onPlatform;
+      },
+
       removeChild: (id) =>
         setState((s) => ({ ...s, children: s.children.filter((c) => c.id !== id) })),
 
@@ -275,9 +339,26 @@ export function AppProvider({ children }) {
         })),
 
       // Booking always starts as a request awaiting the teacher's approval.
+      // The commission rate is snapshotted now, so a later rate change never
+      // rewrites what this booking was agreed at.
       createBooking: (draft) => {
         const id = `b${Date.now()}`;
-        setState((s) => ({
+        setState((s) => {
+          // The same count the booking screen quoted from, so the agreed rate
+          // is the rate the learner was shown.
+          const listed = teacherById(draft.teacherId);
+          const completedSessions = (listed ? listed.sessionsCount : 0)
+            + s.bookings.filter(
+              (b) => b.teacherId === draft.teacherId && b.status === BOOKING_STATUS.COMPLETED,
+            ).length;
+          const rate = commissionRateFor({
+            settings: s.settings,
+            completedSessions,
+            sessionType: draft.sessionType,
+          });
+          const split = splitAmount(draft.price, rate);
+
+          return {
           ...s,
           bookings: [
             {
@@ -286,6 +367,9 @@ export function AppProvider({ children }) {
               createdAt: new Date().toISOString().slice(0, 10),
               durationMins: 60,
               ...draft,
+              commissionRate: rate,
+              platformFee: split.commission,
+              tutorAmount: split.tutorEarning,
             },
             ...s.bookings,
           ],
@@ -293,7 +377,8 @@ export function AppProvider({ children }) {
             { id: `n${Date.now()}`, title: 'أُرسل طلب الحجز', body: 'سيصلك إشعار فور رد المدرس على طلبك', tone: 'accent', unread: true },
             ...s.notifications,
           ],
-        }));
+          };
+        });
         return id;
       },
 
@@ -316,18 +401,64 @@ export function AppProvider({ children }) {
         pushNotification({ title: 'استلمنا إيصال الدفع', body: 'تراجعه الإدارة خلال وقت قصير', tone: 'primary' });
       },
 
-      // Stands in for the admin confirming the transfer landed in the platform account.
+      // The admin confirms the transfer landed in the platform account. The money
+      // is now held by Darsy — the teacher is not paid until the session happens.
       confirmPayment: (id) => {
-        patchBooking(id, {
-          status: BOOKING_STATUS.CONFIRMED,
-          meetingLink: 'https://meet.example.com/darsy-' + id.slice(-4),
+        setState((s) => {
+          const booking = s.bookings.find((b) => b.id === id);
+          if (!booking) return s;
+          return {
+            ...s,
+            bookings: s.bookings.map((b) =>
+              b.id === id
+                ? { ...b, status: BOOKING_STATUS.CONFIRMED, meetingLink: `https://meet.example.com/darsy-${id.slice(-4)}` }
+                : b,
+            ),
+            transactions: [
+              {
+                id: `tx${Date.now()}`,
+                bookingId: id,
+                teacherId: booking.teacherId,
+                learnerName: booking.learnerName,
+                gross: booking.price,
+                commission: booking.platformFee,
+                tutorEarning: booking.tutorAmount,
+                status: 'held',
+                createdAt: new Date().toISOString(),
+              },
+              ...s.transactions,
+            ],
+            notifications: [
+              { id: `n${Date.now()}`, title: 'تم تأكيد حجزك', body: 'ستصلك رسالة تذكير قبل الموعد', tone: 'success', unread: true },
+              ...s.notifications,
+            ],
+          };
         });
-        pushNotification({ title: 'تم تأكيد حجزك', body: 'ستصلك رسالة تذكير قبل الموعد', tone: 'success' });
       },
 
-      cancelBooking: (id) => patchBooking(id, { status: BOOKING_STATUS.CANCELLED }),
+      // Cancelling after payment refunds the learner; a held entry becomes refunded.
+      cancelBooking: (id) =>
+        setState((s) => ({
+          ...s,
+          bookings: s.bookings.map((b) => (b.id === id ? { ...b, status: BOOKING_STATUS.CANCELLED } : b)),
+          transactions: s.transactions.map((t) =>
+            t.bookingId === id && t.status === 'held'
+              ? { ...t, status: 'refunded', refundedAt: new Date().toISOString() }
+              : t,
+          ),
+        })),
 
-      completeBooking: (id) => patchBooking(id, { status: BOOKING_STATUS.COMPLETED }),
+      // Session happened: the held amount is released into the teacher's balance.
+      completeBooking: (id) =>
+        setState((s) => ({
+          ...s,
+          bookings: s.bookings.map((b) => (b.id === id ? { ...b, status: BOOKING_STATUS.COMPLETED } : b)),
+          transactions: s.transactions.map((t) =>
+            t.bookingId === id && t.status === 'held'
+              ? { ...t, status: 'released', releasedAt: new Date().toISOString() }
+              : t,
+          ),
+        })),
 
       // A review can only be attached to a completed booking (business rule).
       addReview: (id, stars, text) =>
@@ -359,7 +490,6 @@ export function AppProvider({ children }) {
 
       resetPrototype: () => setState(seedState()),
 
-      commissionRate: COMMISSION_RATE,
     };
   }, [state]);
 

@@ -1,6 +1,9 @@
 import React from 'react';
 import { useHistory } from 'react-router-dom';
-import { IconBack, IconStar, IconVerified, IconHome, IconCalendar, IconCap, IconUser, IconUsers, IconInbox } from './Icons';
+import {
+  IconBack, IconStar, IconVerified, IconHome, IconCalendar, IconCap, IconUser, IconUsers,
+  IconInbox, IconChart, IconWallet, IconPayout, IconSliders,
+} from './Icons';
 import { useApp } from '../state/AppContext';
 
 export function TopBar({ title, subtitle, back, pastel, right, onBack }) {
@@ -110,6 +113,12 @@ const NAV_BY_ROLE = {
     { key: 'schedule', label: 'جدولي', path: '/schedule', Icon: IconCalendar },
     { key: 'account', label: 'ملفي', path: '/account', Icon: IconUser },
   ],
+  admin: [
+    { key: 'home', label: 'اللوحة', path: '/home', Icon: IconChart },
+    { key: 'payments', label: 'المدفوعات', path: '/payments', Icon: IconWallet },
+    { key: 'payouts', label: 'السحوبات', path: '/payouts', Icon: IconPayout },
+    { key: 'settings', label: 'الإعدادات', path: '/settings', Icon: IconSliders },
+  ],
 };
 
 export function BottomNav({ active }) {
@@ -167,7 +176,7 @@ export function Sheet({ open, onClose, title, children }) {
   );
 }
 
-export const money = (n) => `${n} د.ل`;
+export const money = (n) => `${Number(n).toFixed(2).replace(/\.?0+$/, '')} د.ل`;
 
 export const formatDate = (isoDate) => {
   const d = new Date(`${isoDate}T00:00:00`);

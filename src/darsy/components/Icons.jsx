@@ -88,3 +88,12 @@ export const IconInbox = (p) => (
 export const IconShield = (p) => (
   <svg {...base(p)}><path d="M12 3l7 3v6c0 4.2-3 7.7-7 9-4-1.3-7-4.8-7-9V6z" /><polyline points="9 12 11.2 14.2 15 10.4" /></svg>
 );
+export const IconChart = (p) => (
+  <svg {...base(p)}><line x1="4" y1="20" x2="20" y2="20" /><rect x="6" y="11" width="3" height="6" rx="1" /><rect x="11" y="7" width="3" height="10" rx="1" /><rect x="16" y="13" width="3" height="4" rx="1" /></svg>
+);
+export const IconSliders = (p) => (
+  <svg {...base(p)}><line x1="4" y1="8" x2="20" y2="8" /><line x1="4" y1="16" x2="20" y2="16" /><circle cx="9" cy="8" r="2.4" /><circle cx="15" cy="16" r="2.4" /></svg>
+);
+export const IconPayout = (p) => (
+  <svg {...base(p)}><path d="M12 4v10" /><path d="m8 10.5 4 4 4-4" /><path d="M4 18h16" /></svg>
+);

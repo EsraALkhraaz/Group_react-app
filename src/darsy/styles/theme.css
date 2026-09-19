@@ -362,6 +362,19 @@ input, select, textarea { font-family: inherit; }
 .dz-stats__num { font-size: 16px; font-weight: 800; }
 .dz-stats__lbl { font-size: 11px; color: var(--c-muted); margin-top: 2px; }
 
+/* Admin dashboard tiles: two per row, so a figure and its label stay readable. */
+.dz-kpi { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.dz-kpi__cell {
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  padding: 12px;
+}
+.dz-kpi__num { font-size: 17px; font-weight: 800; }
+.dz-kpi__num small { font-size: 11px; font-weight: 700; margin-inline-start: 3px; color: var(--c-muted); }
+.dz-kpi__lbl { font-size: 11px; color: var(--c-muted); margin-top: 3px; }
+.dz-kpi__cell--accent { background: var(--c-soft); border-color: transparent; }
+
 .dz-tabs { display: flex; gap: 8px; padding: 0 20px 12px; background: var(--c-surface); }
 
 .dz-thumb {

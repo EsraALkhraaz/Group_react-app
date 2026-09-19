@@ -2,12 +2,16 @@ import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { BottomNav, Banner, Sheet, Field, money, formatDate, formatTime } from '../components/common';
 import { IconVideo, IconPin, IconUsers, IconWallet, IconForward, IconBell } from '../components/Icons';
-import { subjectById, COMMISSION_RATE, RATE_LIMITS } from '../data/catalog';
+import { subjectById, RATE_LIMITS } from '../data/catalog';
 import { useApp, BOOKING_STATUS, STATUS_LABEL, STATUS_TONE } from '../state/AppContext';
+import { walletOf, commissionRateFor, percent } from '../lib/money';
 import mark from '../assets/darsy-mark.png';
 
 // The prototype signs the teacher in as Ahmed.
 const ME = 't1';
+
+// A zero deduction reads better without a minus sign in front of it.
+const minus = (n) => (n > 0 ? `- ${money(n)}` : money(n));
 
 function RateRow({ icon, label, value }) {
   return (
@@ -86,7 +90,10 @@ function RatesSheet({ open, onClose, pricing, onSave }) {
 
 export default function TeacherHome() {
   const history = useHistory();
-  const { base, bookings, notifications, teacherFor, setTeacherRates } = useApp();
+  const {
+    base, bookings, notifications, teacherFor, setTeacherRates,
+    transactions, payouts, settings, completedSessionsOf,
+  } = useApp();
   const [ratesOpen, setRatesOpen] = useState(false);
 
   const teacher = teacherFor(ME);
@@ -96,11 +103,15 @@ export default function TeacherHome() {
   const mine = bookings.filter((b) => b.teacherId === ME);
   const requests = mine.filter((b) => b.status === BOOKING_STATUS.PENDING_APPROVAL);
   const upcoming = mine.filter((b) => [BOOKING_STATUS.CONFIRMED, BOOKING_STATUS.AWAITING_PAYMENT, BOOKING_STATUS.PAYMENT_REVIEW].includes(b.status));
-  const completed = mine.filter((b) => b.status === BOOKING_STATUS.COMPLETED);
 
-  const gross = [...upcoming, ...completed].reduce((sum, b) => sum + b.price, 0);
-  const commission = Math.round(gross * COMMISSION_RATE);
-  const net = gross - commission;
+  // Money comes from the ledger, never from the bookings list: only a paid
+  // booking has an entry, and only a finished one is released to the teacher.
+  const wallet = walletOf({ transactions, payouts, teacherId: ME });
+  const myRate = commissionRateFor({
+    settings,
+    completedSessions: completedSessionsOf(ME),
+    sessionType: 'individual',
+  });
 
   const next = [...upcoming].sort((a, b) => (a.date < b.date ? -1 : 1))[0];
 
@@ -203,17 +214,30 @@ export default function TeacherHome() {
         </section>
 
         <section>
-          <div className="dz-section-title"><span>أرباحي</span></div>
+          <div className="dz-section-title">
+            <span>محفظتي</span>
+            <button
+              type="button"
+              className="dz-btn dz-btn--ghost dz-btn--sm"
+              onClick={() => history.push(`${base}/account/payments`)}
+            >
+              التفاصيل والسحب
+            </button>
+          </div>
           <div className="dz-card">
             <div className="dz-row" style={{ marginBottom: 10 }}>
               <IconWallet size={18} />
               <span className="dz-h3">ملخص مالي</span>
             </div>
-            <div className="dz-kv"><span className="dz-kv__k">إجمالي الحجوزات</span><span className="dz-kv__v">{money(gross)}</span></div>
-            <div className="dz-kv"><span className="dz-kv__k">عمولة المنصة ({Math.round(COMMISSION_RATE * 100)}%)</span><span className="dz-kv__v">- {money(commission)}</span></div>
-            <div className="dz-kv dz-total"><span className="dz-kv__k">صافي المستحق</span><span className="dz-kv__v">{money(net)}</span></div>
+            <div className="dz-kv"><span className="dz-kv__k">إجمالي الحجوزات المدفوعة</span><span className="dz-kv__v">{money(wallet.gross)}</span></div>
+            <div className="dz-kv"><span className="dz-kv__k">عمولة درسي</span><span className="dz-kv__v">{minus(wallet.commission)}</span></div>
+            <div className="dz-kv"><span className="dz-kv__k">قيد الانتظار (حصص لم تُنفَّذ بعد)</span><span className="dz-kv__v">{money(wallet.pending)}</span></div>
+            <div className="dz-kv"><span className="dz-kv__k">المسحوب</span><span className="dz-kv__v">{minus(wallet.withdrawn)}</span></div>
+            <div className="dz-kv dz-total"><span className="dz-kv__k">الرصيد المتاح للسحب</span><span className="dz-kv__v">{money(wallet.available)}</span></div>
             <div style={{ marginTop: 12 }}>
-              <Banner tone="primary">تُحوَّل المستحقات بعد إتمام الحصص وفق دورة الصرف المعتمدة.</Banner>
+              <Banner tone="primary">
+                عمولتك الحالية {percent(myRate)} بعد {completedSessionsOf(ME)} حصة — كلما زادت حصصك قلّت العمولة.
+              </Banner>
             </div>
           </div>
         </section>

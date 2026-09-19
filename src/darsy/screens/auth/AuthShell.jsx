@@ -4,7 +4,9 @@ import { Field } from '../../components/common';
 import { IconBack } from '../../components/Icons';
 import logo from '../../assets/darsy-logo.png';
 
-export const ROLE_LABEL = { student: 'طالب', parent: 'ولي أمر', teacher: 'مدرس' };
+export const ROLE_LABEL = {
+  student: 'طالب', parent: 'ولي أمر', teacher: 'مدرس', admin: 'إدارة درسي',
+};
 
 export function AuthShell({ title, subtitle, role, onBack, children, footer }) {
   const history = useHistory();

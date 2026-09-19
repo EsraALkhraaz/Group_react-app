@@ -85,7 +85,20 @@ export default function Entrance() {
           ))}
         </div>
 
-        <p className="dz-faint" style={{ textAlign: 'center', marginTop: 20 }}>
+        {/* Staff, not a fourth kind of user: kept out of the three doors. */}
+        <button
+          type="button"
+          className="dz-faint"
+          style={{
+            background: 'none', border: 'none', marginTop: 18,
+            fontWeight: 700, textDecoration: 'underline', alignSelf: 'center',
+          }}
+          onClick={() => enter('admin')}
+        >
+          دخول فريق درسي
+        </button>
+
+        <p className="dz-faint" style={{ textAlign: 'center', marginTop: 14 }}>
           نموذج أولي للاستكشاف — البيانات تجريبية
         </p>
       </div>

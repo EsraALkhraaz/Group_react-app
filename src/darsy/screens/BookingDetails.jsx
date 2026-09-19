@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useHistory, useParams, useLocation } from 'react-router-dom';
 import { TopBar, Avatar, Banner, Sheet, Field, money, formatDate, formatTime, EmptyState, Stars } from '../components/common';
 import { IconVideo, IconPin, IconCheck, IconUpload, IconClock, IconStar } from '../components/Icons';
-import { subjectById, PLATFORM_BANK, COMMISSION_RATE, FREE_CANCELLATION_HOURS } from '../data/catalog';
+import { subjectById, PLATFORM_BANK, FREE_CANCELLATION_HOURS } from '../data/catalog';
+import { percent } from '../lib/money';
 import { useApp, BOOKING_STATUS, STATUS_LABEL, STATUS_TONE } from '../state/AppContext';
 
 const TIMELINE = [
@@ -18,7 +19,7 @@ export default function BookingDetails() {
   const { id } = useParams();
   const history = useHistory();
   const isNew = new URLSearchParams(useLocation().search).get('new') === '1';
-  const { bookings, submitPayment, confirmPayment, cancelBooking, addReview, teacherFor, base } = useApp();
+  const { bookings, submitPayment, cancelBooking, addReview, teacherFor, base } = useApp();
 
   const [payOpen, setPayOpen] = useState(false);
   const [receipt, setReceipt] = useState('');
@@ -30,7 +31,7 @@ export default function BookingDetails() {
   if (!booking) return <EmptyState title="الحجز غير موجود" body="" />;
 
   const teacher = teacherFor(booking.teacherId);
-  const commission = Math.round(booking.price * COMMISSION_RATE);
+  const commission = booking.platformFee ?? 0;
   const currentStep = order(booking.status);
   const isDead = [BOOKING_STATUS.REJECTED, BOOKING_STATUS.CANCELLED].includes(booking.status);
 
@@ -70,7 +71,10 @@ export default function BookingDetails() {
           <div className="dz-kv"><span className="dz-kv__k">المدة</span><span className="dz-kv__v">{booking.durationMins} دقيقة</span></div>
           {booking.note && <div className="dz-kv"><span className="dz-kv__k">ملاحظتك</span><span className="dz-kv__v">{booking.note}</span></div>}
           <div className="dz-kv dz-total"><span className="dz-kv__k">الإجمالي</span><span className="dz-kv__v">{money(booking.price)}</span></div>
-          <div className="dz-faint">منها {commission} د.ل عمولة المنصة، والباقي مستحق للمدرس بعد إتمام الحصة.</div>
+          <div className="dz-faint">
+            منها {commission} د.ل عمولة المنصة{booking.commissionRate ? ` (${percent(booking.commissionRate)})` : ''}،
+            و{booking.tutorAmount ?? booking.price - commission} د.ل مستحقة للمدرس بعد إتمام الحصة.
+          </div>
         </div>
 
         {!isDead && (
@@ -169,9 +173,9 @@ export default function BookingDetails() {
           </button>
         )}
         {booking.status === BOOKING_STATUS.PAYMENT_REVIEW && (
-          <button type="button" className="dz-btn dz-btn--ghost" onClick={() => confirmPayment(booking.id)}>
-            (محاكاة) تأكيد الإدارة لاستلام المبلغ
-          </button>
+          <div className="dz-faint" style={{ textAlign: 'center', padding: '4px 0 8px' }}>
+            تراجع إدارة درسي الإيصال وتؤكد الاستلام — يصلك إشعار فور التأكيد.
+          </div>
         )}
         {[BOOKING_STATUS.PENDING_APPROVAL, BOOKING_STATUS.AWAITING_PAYMENT, BOOKING_STATUS.CONFIRMED].includes(booking.status) && (
           <button type="button" className="dz-btn dz-btn--danger dz-btn--sm" style={{ width: '100%' }} onClick={() => cancelBooking(booking.id)}>

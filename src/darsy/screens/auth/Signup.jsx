@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useHistory, useParams } from 'react-router-dom';
+import { useHistory, useParams, Redirect } from 'react-router-dom';
 import { Field, Banner } from '../../components/common';
 import { AuthShell, PasswordField, ROLE_LABEL } from './AuthShell';
 import { GRADES } from '../../data/catalog';
@@ -25,6 +25,9 @@ export default function Signup() {
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState('');
 
+  // Nobody signs themselves up as the platform's admin.
+  const blocked = role === 'admin';
+
   const submit = (e) => {
     e.preventDefault();
     const normalized = normalizePhone(phone);
@@ -42,6 +45,8 @@ export default function Signup() {
     history.push(`/auth/${role}/verify`);
     return undefined;
   };
+
+  if (blocked) return <Redirect to="/auth/admin/login" />;
 
   return (
     <AuthShell
