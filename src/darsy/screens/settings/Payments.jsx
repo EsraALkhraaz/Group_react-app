@@ -34,9 +34,13 @@ function CreditCard({ credit }) {
           <IconWallet size={18} />
           <span className="dz-h3">{money(credit.balance)}</span>
         </div>
-        <div className="dz-muted" style={{ marginBottom: credit.entries.length ? 12 : 0 }}>
-          يُستخدم الرصيد مباشرةً في أي حجز قادم بدل التحويل المصرفي.
+        <div className="dz-muted" style={{ marginBottom: 10 }}>
+          يُستخدم الرصيد مباشرةً في أي حجز قادم بدل التحويل المصرفي، ولا ينتهي بالتقادم.
         </div>
+        <Banner tone="accent">
+          الرصيد لا يُحوَّل إلى حساب مصرفي — قيمته تبقى داخل درسي وتُستخدم في الحجوزات فقط.
+        </Banner>
+        <div style={{ height: credit.entries.length ? 12 : 0 }} />
         {credit.entries.map((e) => (
           <div key={e.id} className="dz-kv">
             <span className="dz-kv__k">{e.reason} · {formatDate(e.at.slice(0, 10))}</span>

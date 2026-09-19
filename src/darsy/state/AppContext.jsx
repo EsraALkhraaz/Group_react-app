@@ -85,6 +85,8 @@ const seedState = () => ({
     cancellationFee: 0.25,
     freeCancellationHours: 24,
     requestExpiryHours: 24,
+    apologyLimit: 3,
+    apologyWindowDays: 30,
     paymentFee: 0,
     minimumPayout: 100,
   },
@@ -107,6 +109,8 @@ const seedState = () => ({
   // over what the directory lists for them.
   teacherRates: {},
   teacherProfiles: {},
+  // A teacher stopped from receiving new bookings until the admin lifts it.
+  teacherStatus: {},
   bookings: [
     {
       id: 'b1',
@@ -207,6 +211,22 @@ const mergePricing = (teacher, override) => {
     };
   };
   return { online: apply('online'), f2f: apply('f2f') };
+};
+
+// A teacher who keeps cancelling paid sessions is a trust problem, not a
+// scheduling one: apologies are counted over a window and stop the teacher
+// once they cross the limit.
+const apologiesWithin = (bookings, teacherId, windowDays, status) => {
+  // Lifting a suspension is a fresh start: what the admin already dealt with
+  // is not counted again, or the next apology would re-suspend at once.
+  const lifted = status && status.liftedAt ? new Date(status.liftedAt).getTime() : 0;
+  const since = Math.max(Date.now() - windowDays * 86400000, lifted);
+  return bookings.filter(
+    (b) => b.teacherId === teacherId
+      && b.cancellation
+      && b.cancellation.byTeacher
+      && new Date(b.cancellation.at).getTime() >= since,
+  );
 };
 
 // Credit is money Darsy already holds and now owes back to the payer. It is
@@ -600,19 +620,36 @@ export function AppProvider({ children }) {
           const at = new Date().toISOString();
           const amount = paid ? paid.gross : 0;
 
+          const bookings = s.bookings.map((b) =>
+            b.id === id
+              ? {
+                ...b,
+                status: BOOKING_STATUS.CANCELLED,
+                cancellation: {
+                  byTeacher: true, late: false, fee: 0, refund: amount, credited: amount > 0, reason: reason || '', at,
+                },
+              }
+              : b,
+          );
+
+          const apologies = apologiesWithin(
+            bookings, booking.teacherId, s.settings.apologyWindowDays, s.teacherStatus[booking.teacherId],
+          );
+          const nowSuspended = apologies.length >= s.settings.apologyLimit;
+
           return {
             ...s,
-            bookings: s.bookings.map((b) =>
-              b.id === id
-                ? {
-                  ...b,
-                  status: BOOKING_STATUS.CANCELLED,
-                  cancellation: {
-                    byTeacher: true, late: false, fee: 0, refund: amount, credited: amount > 0, reason: reason || '', at,
-                  },
-                }
-                : b,
-            ),
+            bookings,
+            teacherStatus: nowSuspended
+              ? {
+                ...s.teacherStatus,
+                [booking.teacherId]: {
+                  suspended: true,
+                  at,
+                  reason: `${apologies.length} اعتذارات خلال ${s.settings.apologyWindowDays} يومًا`,
+                },
+              }
+              : s.teacherStatus,
             transactions: paid
               ? s.transactions.map((t) =>
                 t.id === paid.id
@@ -636,6 +673,13 @@ export function AppProvider({ children }) {
               })
               : s.credits,
             notifications: [
+              ...(nowSuspended ? [{
+                id: `n${Date.now() + 1}`,
+                title: 'أُوقف ظهورك مؤقتًا',
+                body: `بلغت ${apologies.length} اعتذارات خلال ${s.settings.apologyWindowDays} يومًا — تواصل مع إدارة درسي لإعادة التفعيل`,
+                tone: 'danger',
+                unread: true,
+              }] : []),
               {
                 id: `n${Date.now()}`,
                 title: 'اعتذر المدرس عن الحصة',
@@ -713,6 +757,37 @@ export function AppProvider({ children }) {
 
       creditOf: (role) => s_credit(state, role),
 
+      apologiesOf: (teacherId) =>
+        apologiesWithin(
+          state.bookings, teacherId, state.settings.apologyWindowDays, state.teacherStatus[teacherId],
+        ),
+
+      isSuspended: (teacherId) => Boolean(state.teacherStatus[teacherId]?.suspended),
+
+      // Only the admin lifts a suspension, and only deliberately.
+      setTeacherSuspended: (teacherId, suspended, reason) =>
+        setState((s) => ({
+          ...s,
+          teacherStatus: {
+            ...s.teacherStatus,
+            [teacherId]: suspended
+              ? { suspended: true, at: new Date().toISOString(), reason: reason || 'إيقاف إداري' }
+              : { suspended: false, liftedAt: new Date().toISOString() },
+          },
+          notifications: [
+            {
+              id: `n${Date.now()}`,
+              title: suspended ? 'أُوقف ظهورك مؤقتًا' : 'أُعيد تفعيل ظهورك',
+              body: suspended
+                ? (reason || 'تواصل مع إدارة درسي')
+                : 'عاد ملفك للظهور في نتائج البحث — نشكر تعاونك',
+              tone: suspended ? 'danger' : 'success',
+              unread: true,
+            },
+            ...s.notifications,
+          ],
+        })),
+
       // A review can only be attached to a completed booking (business rule).
       addReview: (id, stars, text) =>
         patchBooking(id, { review: { stars, text, at: new Date().toISOString() } }),
@@ -728,6 +803,12 @@ export function AppProvider({ children }) {
 
       allTeachers: () =>
         TEACHERS.map((t) => mergeTeacher(t, state.teacherProfiles[t.id], state.teacherRates[t.id])),
+
+      // What search may show: a suspended teacher is not offered to anyone.
+      listedTeachers: () =>
+        TEACHERS
+          .filter((t) => !state.teacherStatus[t.id]?.suspended)
+          .map((t) => mergeTeacher(t, state.teacherProfiles[t.id], state.teacherRates[t.id])),
 
       setTeacherRates: (teacherId, rates) =>
         setState((s) => ({ ...s, teacherRates: { ...s.teacherRates, [teacherId]: rates } })),

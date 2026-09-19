@@ -117,6 +117,7 @@ const NAV_BY_ROLE = {
     { key: 'home', label: 'اللوحة', path: '/home', Icon: IconChart },
     { key: 'payments', label: 'المدفوعات', path: '/payments', Icon: IconWallet },
     { key: 'payouts', label: 'السحوبات', path: '/payouts', Icon: IconPayout },
+    { key: 'teachers', label: 'المدرسون', path: '/teachers', Icon: IconCap },
     { key: 'settings', label: 'الإعدادات', path: '/settings', Icon: IconSliders },
   ],
 };

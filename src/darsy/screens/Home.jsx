@@ -8,7 +8,7 @@ import mark from '../assets/darsy-mark.png';
 
 export default function Home() {
   const history = useHistory();
-  const { base, profile, role, bookings, notifications, children, teacherFor, allTeachers } = useApp();
+  const { base, profile, role, bookings, notifications, children, teacherFor, listedTeachers } = useApp();
 
   const unread = notifications.filter((n) => n.unread).length;
   const upcoming = bookings
@@ -16,7 +16,7 @@ export default function Home() {
     .sort((a, b) => (a.date < b.date ? -1 : 1))
     .slice(0, 3);
 
-  const topRated = [...allTeachers()].sort((a, b) => b.rating - a.rating).slice(0, 4);
+  const topRated = [...listedTeachers()].sort((a, b) => b.rating - a.rating).slice(0, 4);
 
   return (
     <div className="dz-screen">

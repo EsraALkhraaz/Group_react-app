@@ -19,6 +19,8 @@ const draftFrom = (settings) => ({
   cancellationFee: toPercent(settings.cancellationFee),
   freeCancellationHours: String(settings.freeCancellationHours),
   requestExpiryHours: String(settings.requestExpiryHours),
+  apologyLimit: String(settings.apologyLimit),
+  apologyWindowDays: String(settings.apologyWindowDays),
   paymentFee: toPercent(settings.paymentFee),
   minimumPayout: String(settings.minimumPayout),
 });
@@ -69,6 +71,8 @@ export default function AdminSettings() {
     && validPercent(draft.cancellationFee)
     && validCount(draft.freeCancellationHours)
     && validCount(draft.requestExpiryHours)
+    && validCount(draft.apologyLimit)
+    && validCount(draft.apologyWindowDays)
     && validPercent(draft.paymentFee)
     && validCount(draft.minimumPayout);
 
@@ -81,6 +85,8 @@ export default function AdminSettings() {
       cancellationFee: toRate(draft.cancellationFee),
       freeCancellationHours: Number(draft.freeCancellationHours),
       requestExpiryHours: Number(draft.requestExpiryHours),
+      apologyLimit: Number(draft.apologyLimit),
+      apologyWindowDays: Number(draft.apologyWindowDays),
       paymentFee: toRate(draft.paymentFee),
       minimumPayout: Number(draft.minimumPayout),
     });
@@ -145,6 +151,34 @@ export default function AdminSettings() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        <section style={{ marginBottom: 18 }}>
+          <div className="dz-section-title"><span>انضباط المدرسين</span></div>
+          <div className="dz-card">
+            <div className="dz-stack">
+              <Field label="عدد الاعتذارات قبل الإيقاف" hint="يُوقف المدرس تلقائيًا عند بلوغه">
+                <input
+                  className="dz-input"
+                  type="number"
+                  inputMode="numeric"
+                  min="1"
+                  value={draft.apologyLimit}
+                  onChange={(e) => set('apologyLimit')(e.target.value)}
+                />
+              </Field>
+              <Field label="مدة احتساب الاعتذارات (يوم)">
+                <input
+                  className="dz-input"
+                  type="number"
+                  inputMode="numeric"
+                  min="1"
+                  value={draft.apologyWindowDays}
+                  onChange={(e) => set('apologyWindowDays')(e.target.value)}
+                />
+              </Field>
             </div>
           </div>
         </section>

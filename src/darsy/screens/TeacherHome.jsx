@@ -92,7 +92,7 @@ export default function TeacherHome() {
   const history = useHistory();
   const {
     base, bookings, notifications, teacherFor, setTeacherRates,
-    transactions, payouts, settings, completedSessionsOf,
+    transactions, payouts, settings, completedSessionsOf, isSuspended, apologiesOf,
   } = useApp();
   const [ratesOpen, setRatesOpen] = useState(false);
 
@@ -130,6 +130,16 @@ export default function TeacherHome() {
       </header>
 
       <div className="dz-body">
+        {isSuspended(ME) && (
+          <div style={{ marginBottom: 16 }}>
+            <Banner tone="danger">
+              ملفك موقوف مؤقتًا عن الظهور في البحث بعد {apologiesOf(ME).length} اعتذارات خلال
+              {' '}{settings.apologyWindowDays} يومًا. حجوزاتك القائمة لم تُلغَ، لكن لن تصلك طلبات
+              جديدة حتى تتواصل مع إدارة درسي وتُعيد تفعيل ملفك.
+            </Banner>
+          </div>
+        )}
+
         <div className="dz-stats" style={{ marginBottom: 16 }}>
           <div className="dz-stats__cell">
             <div className="dz-stats__num">{requests.length}</div>

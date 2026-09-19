@@ -29,6 +29,7 @@ import AdminHome from './screens/admin/AdminHome';
 import AdminPayments from './screens/admin/AdminPayments';
 import AdminPayouts from './screens/admin/AdminPayouts';
 import AdminSettings from './screens/admin/AdminSettings';
+import AdminTeachers from './screens/admin/AdminTeachers';
 import './styles/theme.css';
 
 function ScrollToTop() {
@@ -111,6 +112,7 @@ function AdminRoutes() {
         <Route exact path="/admin/home" component={AdminHome} />
         <Route exact path="/admin/payments" component={AdminPayments} />
         <Route exact path="/admin/payouts" component={AdminPayouts} />
+        <Route exact path="/admin/teachers" component={AdminTeachers} />
         <Route exact path="/admin/settings" component={AdminSettings} />
         <Redirect to="/admin/home" />
       </Switch>
