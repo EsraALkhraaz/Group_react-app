@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { BottomNav, Banner, Sheet, Field, money, formatDate, formatTime } from '../components/common';
-import { IconVideo, IconPin, IconUsers, IconWallet, IconForward, IconBell } from '../components/Icons';
+import {
+  IconVideo, IconPin, IconUsers, IconWallet, IconForward, IconBell, IconShield, IconUpload,
+} from '../components/Icons';
 import { subjectById, RATE_LIMITS } from '../data/catalog';
 import { useApp, BOOKING_STATUS, STATUS_LABEL, STATUS_TONE } from '../state/AppContext';
 import { walletOf, commissionRateFor, percent } from '../lib/money';
@@ -93,6 +95,7 @@ export default function TeacherHome() {
   const {
     base, bookings, notifications, teacherFor, setTeacherRates,
     transactions, payouts, settings, completedSessionsOf, isSuspended, apologiesOf,
+    submitVerification,
   } = useApp();
   const [ratesOpen, setRatesOpen] = useState(false);
 
@@ -116,6 +119,7 @@ export default function TeacherHome() {
   const next = [...upcoming].sort((a, b) => (a.date < b.date ? -1 : 1))[0];
 
   const DAY_NAMES = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+  const verification = teacher.verification || { status: 'verified' };
   const availability = teacher.availability || {};
   const weeklyHours = Object.values(availability).reduce((sum, list) => sum + list.length, 0);
   const openDays = Object.keys(availability)
@@ -137,6 +141,46 @@ export default function TeacherHome() {
       </header>
 
       <div className="dz-body">
+        {verification.status !== 'verified' && (
+          <section style={{ marginBottom: 16 }}>
+            <div className="dz-card">
+              <div className="dz-row" style={{ marginBottom: 10 }}>
+                <span
+                  className="dz-avatar dz-avatar--sm"
+                  style={{
+                    background: verification.status === 'pending' ? 'var(--c-primary-bg)' : 'var(--c-accent-bg)',
+                    color: verification.status === 'pending' ? 'var(--c-primary-text)' : 'var(--c-accent-text)',
+                  }}
+                >
+                  <IconShield size={16} />
+                </span>
+                <span className="dz-grow">
+                  <span style={{ fontWeight: 800, fontSize: 14, display: 'block' }}>
+                    {verification.status === 'pending' ? 'هويتك قيد المراجعة' : 'ملفك غير موثّق'}
+                  </span>
+                  <span className="dz-muted" style={{ display: 'block', marginTop: 2 }}>
+                    {verification.status === 'pending'
+                      ? `استلمنا ${verification.document} — لا يظهر ملفك في البحث حتى تعتمده الإدارة`
+                      : (verification.reason || 'ارفع مستند هويتك ليظهر ملفك للطلاب')}
+                  </span>
+                </span>
+              </div>
+
+              {verification.status !== 'pending' && (
+                <label className="dz-btn dz-btn--primary dz-btn--sm" style={{ width: '100%', cursor: 'pointer' }}>
+                  <IconUpload size={16} /> رفع مستند الهوية
+                  <input
+                    type="file"
+                    accept="image/*,.pdf"
+                    style={{ display: 'none' }}
+                    onChange={(e) => submitVerification(ME, e.target.files?.[0]?.name || 'national-id.jpg')}
+                  />
+                </label>
+              )}
+            </div>
+          </section>
+        )}
+
         {isSuspended(ME) && (
           <div style={{ marginBottom: 16 }}>
             <Banner tone="danger">

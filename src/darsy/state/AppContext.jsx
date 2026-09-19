@@ -113,6 +113,10 @@ const seedState = () => ({
   teacherProfiles: {},
   // A teacher stopped from receiving new bookings until the admin lifts it.
   teacherStatus: {},
+  // Identity review. A teacher is not listed publicly until Darsy approves it.
+  teacherVerification: {
+    t6: { status: 'pending', document: 'national-id.jpg', submittedAt: hoursAgo(20) },
+  },
   bookings: [
     {
       id: 'b1',
@@ -246,10 +250,13 @@ const addCredit = (credits, payerRole, entry) => {
 };
 
 // The directory entry is the starting point; whatever the teacher edited wins.
-const mergeTeacher = (base, profile, rates) => ({
+const mergeTeacher = (base, profile, rates, verification) => ({
   ...base,
   ...(profile || {}),
   pricing: mergePricing(base, rates),
+  // The directory says verified; the admin's review overrides it.
+  verified: verification ? verification.status === 'verified' : base.verified,
+  verification: verification || { status: base.verified ? 'verified' : 'pending' },
 });
 
 const s_credit = (state, role) => state.credits[role || state.role] || { balance: 0, entries: [] };
@@ -857,6 +864,56 @@ export function AppProvider({ children }) {
 
       isSuspended: (teacherId) => Boolean(state.teacherStatus[teacherId]?.suspended),
 
+      // The teacher hands in their identity document and waits — they are not
+      // listed publicly until someone at Darsy has actually looked at it.
+      submitVerification: (teacherId, document) =>
+        setState((s) => ({
+          ...s,
+          teacherVerification: {
+            ...s.teacherVerification,
+            [teacherId]: { status: 'pending', document, submittedAt: new Date().toISOString() },
+          },
+          notifications: [
+            {
+              id: `n${Date.now()}`,
+              title: 'استلمنا مستند هويتك',
+              body: 'تراجعه إدارة درسي، ويظهر ملفك في البحث فور اعتماده',
+              tone: 'primary',
+              unread: true,
+            },
+            ...s.notifications,
+          ],
+        })),
+
+      reviewVerification: (teacherId, approved, reason) =>
+        setState((s) => {
+          const current = s.teacherVerification[teacherId] || {};
+          return {
+            ...s,
+            teacherVerification: {
+              ...s.teacherVerification,
+              [teacherId]: {
+                ...current,
+                status: approved ? 'verified' : 'rejected',
+                reviewedAt: new Date().toISOString(),
+                reason: approved ? '' : (reason || ''),
+              },
+            },
+            notifications: [
+              {
+                id: `n${Date.now()}`,
+                title: approved ? 'وُثِّقت هويتك' : 'لم يُقبل مستند الهوية',
+                body: approved
+                  ? 'ملفك ظاهر الآن للطلاب في نتائج البحث'
+                  : (reason || 'أعد رفع صورة أوضح للمستند'),
+                tone: approved ? 'success' : 'danger',
+                unread: true,
+              },
+              ...s.notifications,
+            ],
+          };
+        }),
+
       // Only the admin lifts a suspension, and only deliberately.
       setTeacherSuspended: (teacherId, suspended, reason) =>
         setState((s) => ({
@@ -891,17 +948,24 @@ export function AppProvider({ children }) {
       // What every screen should read — never the raw directory entry.
       teacherFor: (id) => {
         const base = teacherById(id);
-        return base ? mergeTeacher(base, state.teacherProfiles[id], state.teacherRates[id]) : null;
+        return base
+          ? mergeTeacher(base, state.teacherProfiles[id], state.teacherRates[id], state.teacherVerification[id])
+          : null;
       },
 
       allTeachers: () =>
-        TEACHERS.map((t) => mergeTeacher(t, state.teacherProfiles[t.id], state.teacherRates[t.id])),
+        TEACHERS.map((t) => mergeTeacher(
+          t, state.teacherProfiles[t.id], state.teacherRates[t.id], state.teacherVerification[t.id],
+        )),
 
-      // What search may show: a suspended teacher is not offered to anyone.
+      // What search may show: neither a suspended teacher nor an unverified one.
       listedTeachers: () =>
         TEACHERS
           .filter((t) => !state.teacherStatus[t.id]?.suspended)
-          .map((t) => mergeTeacher(t, state.teacherProfiles[t.id], state.teacherRates[t.id])),
+          .map((t) => mergeTeacher(
+            t, state.teacherProfiles[t.id], state.teacherRates[t.id], state.teacherVerification[t.id],
+          ))
+          .filter((t) => t.verified),
 
       setTeacherRates: (teacherId, rates) =>
         setState((s) => ({ ...s, teacherRates: { ...s.teacherRates, [teacherId]: rates } })),
