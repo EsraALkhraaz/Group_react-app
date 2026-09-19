@@ -62,6 +62,9 @@ const seedState = () => ({
   ],
   favorites: ['t2'],
   activeChild: null,
+  studentGradeId: 'g6',
+  prefs: { inApp: true, reminders: true, sms: false },
+  payoutAccount: { bankName: 'مصرف الوحدة', holder: 'أحمد علي المبروك', accountNumber: '0044-7781-2290' },
   // What a teacher edited about themselves — rates and profile fields both win
   // over what the directory lists for them.
   teacherRates: {},
@@ -238,6 +241,27 @@ export function AppProvider({ children }) {
         })),
 
       signOut: () => setState((s) => ({ ...s, session: null })),
+
+      updateProfile: ({ name, phone, gradeId }) =>
+        setState((s) => {
+          const phoneChanged = s.session && phone !== s.session.phone;
+          return {
+            ...s,
+            profile: { name, phone },
+            studentGradeId: gradeId ?? s.studentGradeId,
+            session: s.session ? { ...s.session, name, phone } : s.session,
+            accounts: s.accounts.map((a) =>
+              s.session && a.role === s.session.role && a.phone === s.session.phone
+                // A new number has to be confirmed again before it counts as verified.
+                ? { ...a, name, phone, verified: phoneChanged ? false : a.verified }
+                : a,
+            ),
+          };
+        }),
+
+      setPref: (key, value) => setState((s) => ({ ...s, prefs: { ...s.prefs, [key]: value } })),
+
+      setPayoutAccount: (account) => setState((s) => ({ ...s, payoutAccount: account })),
 
       removeChild: (id) =>
         setState((s) => ({ ...s, children: s.children.filter((c) => c.id !== id) })),

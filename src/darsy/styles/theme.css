@@ -389,3 +389,23 @@ input, select, textarea { font-family: inherit; }
   width: 42px; height: 4px; border-radius: 999px;
   background: #D9E4E2; margin: 0 auto 14px;
 }
+
+/* ---------- switch ---------- */
+.dz-switch {
+  position: relative;
+  width: 46px; height: 27px;
+  flex-shrink: 0;
+  border-radius: var(--r-pill);
+  border: none;
+  background: #D9E2E0;
+  transition: background .15s ease;
+}
+.dz-switch--on { background: var(--c-primary); }
+.dz-switch__dot {
+  position: absolute; top: 3px; inset-inline-start: 3px;
+  width: 21px; height: 21px; border-radius: 50%;
+  background: #fff;
+  transition: inset-inline-start .15s ease;
+  box-shadow: 0 1px 3px rgba(16, 58, 58, .25);
+}
+.dz-switch--on .dz-switch__dot { inset-inline-start: 22px; }

@@ -22,6 +22,9 @@ import Signup from './screens/auth/Signup';
 import VerifyPhone from './screens/auth/VerifyPhone';
 import ForgotPassword from './screens/auth/ForgotPassword';
 import ResetPassword from './screens/auth/ResetPassword';
+import PersonalDetails from './screens/settings/PersonalDetails';
+import Payments from './screens/settings/Payments';
+import Security from './screens/settings/Security';
 import './styles/theme.css';
 
 function ScrollToTop() {
@@ -55,7 +58,10 @@ const LEARNER_SCREENS = [
   { path: '/booking/:id', component: BookingDetails },
   { path: '/bookings', component: MyBookings },
   { path: '/notifications', component: Notifications },
-  { path: '/account', component: Account },
+  { path: '/account/profile', component: PersonalDetails },
+  { path: '/account/payments', component: Payments },
+  { path: '/account/security', component: Security },
+  { path: '/account', component: Account, exact: true },
 ];
 
 function LearnerRoutes({ base, role, home }) {
@@ -64,8 +70,8 @@ function LearnerRoutes({ base, role, home }) {
       <Switch>
         <Route exact path={`${base}/home`} component={home} />
         {role === 'parent' && <Route exact path={`${base}/children`} component={Children} />}
-        {LEARNER_SCREENS.map(({ path, component }) => (
-          <Route key={path} path={`${base}${path}`} component={component} />
+        {LEARNER_SCREENS.map(({ path, component, exact }) => (
+          <Route key={path} exact={exact} path={`${base}${path}`} component={component} />
         ))}
         <Redirect to={`${base}/home`} />
       </Switch>
@@ -81,6 +87,9 @@ function TeacherRoutes() {
         <Route exact path="/teacher/requests" component={TeacherRequests} />
         <Route exact path="/teacher/schedule" component={TeacherSchedule} />
         <Route exact path="/teacher/account" component={Account} />
+        <Route exact path="/teacher/account/profile" component={PersonalDetails} />
+        <Route exact path="/teacher/account/payments" component={Payments} />
+        <Route exact path="/teacher/account/security" component={Security} />
         <Route exact path="/teacher/edit" component={TeacherProfileEdit} />
         <Route exact path="/teacher/notifications" component={Notifications} />
         <Route exact path="/teacher/preview" render={() => <TeacherProfile teacherId="t1" />} />

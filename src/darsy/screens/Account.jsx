@@ -67,7 +67,7 @@ export default function Account() {
         <section style={{ marginBottom: 18 }}>
           <div className="dz-section-title"><span>الإعدادات</span></div>
           <div className="dz-card">
-            <button type="button" className="dz-listrow">
+            <button type="button" className="dz-listrow" onClick={() => history.push(`${base}/account/profile`)}>
               <IconUser size={18} />
               <span className="dz-grow" style={{ fontSize: 14, fontWeight: 600 }}>بياناتي الشخصية</span>
               <IconForward size={16} />
@@ -77,14 +77,14 @@ export default function Account() {
               <span className="dz-grow" style={{ fontSize: 14, fontWeight: 600 }}>الإشعارات</span>
               <IconForward size={16} />
             </button>
-            <button type="button" className="dz-listrow">
+            <button type="button" className="dz-listrow" onClick={() => history.push(`${base}/account/payments`)}>
               <IconWallet size={18} />
               <span className="dz-grow" style={{ fontSize: 14, fontWeight: 600 }}>
-                {isTeacher ? 'حساب استلام المستحقات' : 'طرق الدفع والفواتير'}
+                {isTeacher ? 'المستحقات والفواتير' : 'المدفوعات والفواتير'}
               </span>
               <IconForward size={16} />
             </button>
-            <button type="button" className="dz-listrow">
+            <button type="button" className="dz-listrow" onClick={() => history.push(`${base}/account/security`)}>
               <IconShield size={18} />
               <span className="dz-grow" style={{ fontSize: 14, fontWeight: 600 }}>الخصوصية والأمان</span>
               <IconForward size={16} />

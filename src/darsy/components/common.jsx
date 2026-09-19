@@ -134,6 +134,26 @@ export function BottomNav({ active }) {
   );
 }
 
+export function Toggle({ label, hint, checked, onChange }) {
+  return (
+    <label className="dz-row" style={{ padding: '12px 0', borderBottom: '1px solid var(--c-line)', cursor: 'pointer' }}>
+      <span className="dz-grow">
+        <span style={{ fontSize: 14, fontWeight: 600, display: 'block' }}>{label}</span>
+        {hint && <span className="dz-muted" style={{ display: 'block', marginTop: 2 }}>{hint}</span>}
+      </span>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }}
+      />
+      <span className={`dz-switch${checked ? ' dz-switch--on' : ''}`} aria-hidden="true">
+        <span className="dz-switch__dot" />
+      </span>
+    </label>
+  );
+}
+
 export function Sheet({ open, onClose, title, children }) {
   if (!open) return null;
   return (
