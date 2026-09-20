@@ -27,7 +27,8 @@ const signup = (over: Record<string, unknown> = {}) =>
 before(async () => {
   app = await buildApp();
   // A clean slate, so a rerun never passes on yesterday's rows.
-  await query('truncate login_attempts, otp_codes, refresh_tokens, teacher_profiles, users restart identity cascade');
+  await query(`truncate bookings, teacher_profiles, login_attempts, otp_codes, refresh_tokens, users
+               restart identity cascade`);
 });
 
 after(async () => {

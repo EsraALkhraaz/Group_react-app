@@ -5,6 +5,8 @@ import { ZodError } from 'zod';
 import { config, assertProductionSafe } from './config.ts';
 import { ApiError } from './lib/errors.ts';
 import authRoutes from './routes/auth.ts';
+import referenceRoutes from './routes/reference.ts';
+import teacherRoutes from './routes/teachers.ts';
 
 export async function buildApp(): Promise<FastifyInstance> {
   assertProductionSafe();
@@ -44,6 +46,8 @@ export async function buildApp(): Promise<FastifyInstance> {
   app.get('/health', async () => ({ ok: true, env: config.env }));
 
   await app.register(authRoutes, { prefix: '/api' });
+  await app.register(referenceRoutes, { prefix: '/api' });
+  await app.register(teacherRoutes, { prefix: '/api' });
 
   return app;
 }
