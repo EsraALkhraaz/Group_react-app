@@ -7,7 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/auth.test.ts && tsx --test tests/teachers.test.ts",
+    "test": "tsx --test tests/auth.test.ts && tsx --test tests/teachers.test.ts && tsx --test tests/bookings.test.ts",
     "test:all": "./db.sh >/dev/null && ./test.sh && npm run typecheck && npm test",
     "db": "./db.sh",
     "db:constraints": "./test.sh"

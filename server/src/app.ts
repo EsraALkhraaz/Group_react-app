@@ -7,6 +7,7 @@ import { ApiError } from './lib/errors.ts';
 import authRoutes from './routes/auth.ts';
 import referenceRoutes from './routes/reference.ts';
 import teacherRoutes from './routes/teachers.ts';
+import bookingRoutes from './routes/bookings.ts';
 
 export async function buildApp(): Promise<FastifyInstance> {
   assertProductionSafe();
@@ -40,6 +41,7 @@ export async function buildApp(): Promise<FastifyInstance> {
     // Anything unrecognised is logged in full and reported as nothing: an
     // internal message can leak table names, queries or worse.
     request.log.error(error);
+    if (config.env === 'test') console.error('UNHANDLED:', error);
     return reply.code(500).send({ error: 'internal', message: 'حدث خطأ غير متوقع' });
   });
 
@@ -48,6 +50,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(authRoutes, { prefix: '/api' });
   await app.register(referenceRoutes, { prefix: '/api' });
   await app.register(teacherRoutes, { prefix: '/api' });
+  await app.register(bookingRoutes, { prefix: '/api' });
 
   return app;
 }
